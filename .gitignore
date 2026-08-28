@@ -1,0 +1,14 @@
+.env
+storage/app.key
+storage/data.json
+storage/mail/*
+!storage/mail/.gitkeep
+storage/logs/*
+!storage/logs/.gitkeep
+storage/rate-limits.json
+storage/runtime/*
+!storage/runtime/.gitkeep
+storage/sessions/*
+!storage/sessions/.gitkeep
+storage/*.tmp.json
+graphify-out/

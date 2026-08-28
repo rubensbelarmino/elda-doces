@@ -1,0 +1,8 @@
+.git
+storage/data.json
+storage/sessions/*
+storage/app.key
+storage/mail/*
+storage/logs/*
+tests
+README.md

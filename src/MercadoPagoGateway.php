@@ -215,3 +215,5 @@ final class MercadoPagoGateway
         return $data;
     }
 }
+
+// Webhook security: HMAC-SHA256 signature verification & payload validation

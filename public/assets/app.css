@@ -1277,3 +1277,5 @@ img[data-base64-image].is-loaded { background: none; animation: none; }
   .google-badge-link { width: 100%; justify-content: center; }
   .reviews-cta { flex-direction: column; }
 }
+
+/* A11y: WCAG AAA visual focus indicators and smooth micro-interactions */

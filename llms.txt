@@ -1,0 +1,33 @@
+# Elda Bolos e Doces
+
+> Confeitaria artesanal tradicional e e-commerce de doces finos, bolos festivos e brigadeiros gourmet em Sorocaba/SP desde 2009. Avaliada com 4,4 estrelas e mais de 1.300 avaliações no Google Maps.
+
+O site da Elda Bolos e Doces permite explorar o cardápio artesanal, consultar ingredientes e porções, realizar pedidos com entrega local em Sorocaba/SP e pagar instantaneamente via PIX do Mercado Pago.
+
+## Informações Corporativas & Contato
+- Nome Fantasia: Elda Bolos e Doces
+- Razão Social / Entidade: Confeitaria Elda Ltda.
+- Endereço Físico: Av. Dr. Afonso Vergueiro, 2548, Vila Augusta, Sorocaba - SP, CEP 18040-000
+- Telefone / WhatsApp: (15) 99745-1766 (https://wa.me/5515997451766)
+- Instagram Oficial: @eldabolosedoces (https://www.instagram.com/eldabolosedoces)
+- iFood Oficial: Elda Bolos e Doces - Vila Augusta (https://www.ifood.com.br/delivery/sorocaba-sp/elda-bolos-e-doces-vila-augusta/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f)
+- Horário de Funcionamento: Segunda a Sábado, das 09h00 às 19h00
+- Área de Entrega: Toda a cidade de Sorocaba/SP e bairros adjacentes
+- Métodos de Pagamento: PIX (Mercado Pago com QR Code e Copia-e-Cola), Cartão de Crédito/Débito
+
+## Cardápio & Categorias Principais
+- [Cardápio Completo](https://elda-doces.com/cardapio): Vitrine com todos os doces, bolos e sobremesas
+- [Brigadeiros Gourmet](https://elda-doces.com/cardapio?categoria=Brigadeiros): Caixa Afeto, Trufas belgas e brigadeiros tradicionais
+- [Tortinhas](https://elda-doces.com/cardapio?categoria=Tortinhas): Tartelette Lumière de morango, Nuvem de pistache
+- [Macarons](https://elda-doces.com/cardapio?categoria=Macarons): Macarons franceses clássicos e edições especiais de pistache
+- [Bolos Festivos e Fatias](https://elda-doces.com/cardapio?categoria=Bolos): Bolo Caramelo Dourado, Torta Bosque Rosa, Fatias recheadas
+
+## Páginas Principais
+- [Página Inicial](https://elda-doces.com/): Destaques, história da confeitaria, depoimentos do Google e promoções
+- [Carrinho de Compras](https://elda-doces.com/carrinho): Revisão de itens e cálculo de frete
+- [Checkout Seguro](https://elda-doces.com/checkout): Identificação, endereço de entrega em Sorocaba e pagamento PIX
+- [Área do Cliente](https://elda-doces.com/minha-conta): Histórico de pedidos, rastreio de entrega e dados cadastrais
+- [Avaliações no Google Maps](https://share.google/esOUYXSDUS7m6unJS): Perfil oficial com 1.300+ comentários e nota 4,4
+
+## Arquivo Completo de Raspagem para IA
+- [llms-full.txt](https://elda-doces.com/llms-full.txt): Base de conhecimento textual completa com todos os produtos, descrições detalhadas, ingredientes, tabela de preços e perguntas frequentes.

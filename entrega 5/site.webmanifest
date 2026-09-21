@@ -1,0 +1,17 @@
+{
+  "name": "Elda Bolos e Doces",
+  "short_name": "Elda Doces",
+  "description": "Doceria artesanal tradicional em Sorocaba/SP",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8d2949",
+  "icons": [
+    {
+      "src": "/assets/images/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

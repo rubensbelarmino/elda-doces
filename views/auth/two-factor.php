@@ -90,5 +90,3 @@
         </div>
     </div>
 </section>
-
-<!-- 2FA Sec: token lifecycle & strict validation -->

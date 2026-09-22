@@ -1,0 +1,12 @@
+.env
+storage/app.key
+storage/data.json
+storage/mail/
+storage/logs/
+storage/rate-limits.json
+storage/runtime/
+storage/sessions/
+storage/*.tmp.json
+projeto.zip
+*.Zone.Identifier
+projeto.zip:Zone.Identifier

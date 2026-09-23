@@ -4,7 +4,9 @@ $user = current_user();
 $cart = cart_details();
 $flashes = consume_flashes();
 
-$pageTitle = isset($title) ? $title . ' — Elda Bolos e Doces' : 'Elda Bolos e Doces — Doceria Artesanal em Sorocaba';
+$pageTitle = isset($title)
+    ? (str_contains($title, 'Elda Bolos e Doces') ? $title : $title . ' — Elda Bolos e Doces')
+    : 'Doces artesanais feitos em Sorocaba — Elda Bolos e Doces';
 $pageDescription = isset($description)
     ? $description
     : 'Elda Bolos e Doces em Sorocaba: bolos artesanais, tortas finas, brigadeiros e doces feitos com carinho. Peça pelo site ou delivery.';

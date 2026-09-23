@@ -30,6 +30,9 @@ $ogImage = isset($metaImage) ? $metaImage : request_base_url() . versioned_asset
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 
     <link rel="canonical" href="<?= e($canonicalUrl) ?>">
+    <link rel="alternate" hreflang="pt-BR" href="<?= e($canonicalUrl) ?>">
+    <link rel="alternate" hreflang="pt" href="<?= e($canonicalUrl) ?>">
+    <link rel="alternate" hreflang="x-default" href="<?= e($canonicalUrl) ?>">
 
     <meta property="og:locale" content="pt_BR">
     <meta property="og:type" content="<?= isset($product) ? 'product' : 'website' ?>">
@@ -64,16 +67,31 @@ $ogImage = isset($metaImage) ? $metaImage : request_base_url() . versioned_asset
     $gaId = trim((string) (getenv('GOOGLE_ANALYTICS_ID') ?: 'G-ELDADOCES0'));
     $gtmId = trim((string) (getenv('GOOGLE_TAG_MANAGER_ID') ?: getenv('GTM_ID') ?: 'GTM-T98GCPGN'));
     ?>
+    <script async defer nonce="<?= e($nonce) ?>">
+    (function(){
+      var orig = document.createElement;
+      document.createElement = function(tag, opts){
+        var el = orig.call(document, tag, opts);
+        if (tag && String(tag).toLowerCase() === 'script') {
+          el.setAttribute('async', '');
+          el.setAttribute('defer', '');
+          el.async = true;
+          el.defer = true;
+        }
+        return el;
+      };
+    })();
+    </script>
     <!-- Google Tag Manager -->
     <script async defer nonce="<?= e($nonce) ?>">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.defer=true;j.setAttribute('async','');j.setAttribute('defer','');j.src=
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','<?= e($gtmId) ?>');</script>
     <!-- End Google Tag Manager -->
 
-    <script async src="https://www.googletagmanager.com/gtag/js?id=<?= e($gaId) ?>"></script>
-    <script defer nonce="<?= e($nonce) ?>">
+    <script async defer src="https://www.googletagmanager.com/gtag/js?id=<?= e($gaId) ?>"></script>
+    <script async defer nonce="<?= e($nonce) ?>">
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
@@ -259,6 +277,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <span class="whatsapp-float-text">WhatsApp</span>
 </a>
 
-<script nonce="<?= e($nonce) ?>" src="<?= versioned_asset('app.min.js') ?>" defer></script>
+<script nonce="<?= e($nonce) ?>" src="<?= versioned_asset('app.min.js') ?>" defer async></script>
 </body>
 </html>

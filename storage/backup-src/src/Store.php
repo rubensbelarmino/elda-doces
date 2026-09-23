@@ -71,6 +71,8 @@
 //     public function updateUserPassword(string $id, string $passwordHash): void;
 //     public function createUser(string $name, string $email, string $passwordHash, string $role = 'customer'): string;
 //     public function deleteUserByEmail(string $email): bool;
+//     public function userDeliveryAddress(string $userId): ?array;
+//     public function saveUserDeliveryAddress(string $userId, array $address): void;
 //     public function createOrder(string $userId, array $customer, array $items, int $totalCents): array;
 //     public function orderById(string $id): ?array;
 //     public function orderByPaymentId(string $paymentId): ?array;
@@ -184,6 +186,31 @@
 //             $data['users'] = array_values(array_filter($data['users'], fn (array $u): bool => !in_array($u['id'], $ids, true)));
 //             $data['orders'] = array_values(array_filter($data['orders'], fn (array $o): bool => !in_array($o['user_id'], $ids, true)));
 //             return true;
+//         });
+//     }
+//
+//     public function userDeliveryAddress(string $userId): ?array
+//     {
+//         foreach ($this->read()['users'] as $user) {
+//             if ($user['id'] === $userId) {
+//                 return (!empty($user['delivery_address']) && is_array($user['delivery_address']))
+//                     ? $user['delivery_address']
+//                     : null;
+//             }
+//         }
+//         return null;
+//     }
+//
+//     public function saveUserDeliveryAddress(string $userId, array $address): void
+//     {
+//         $this->mutate(function (array &$data) use ($userId, $address): null {
+//             foreach ($data['users'] as &$user) {
+//                 if ($user['id'] === $userId) {
+//                     $user['delivery_address'] = $address;
+//                     return null;
+//                 }
+//             }
+//             throw new RuntimeException('Usuário não encontrado.');
 //         });
 //     }
 //
@@ -432,6 +459,20 @@
 //             $this->pdo->rollBack();
 //             throw $e;
 //         }
+//     }
+//
+//     public function userDeliveryAddress(string $userId): ?array
+//     {
+//         $row = $this->one('SELECT delivery_json FROM users WHERE id = ?', [$userId]);
+//         if (!$row || empty($row['delivery_json'])) return null;
+//         $decoded = json_decode((string) $row['delivery_json'], true);
+//         return is_array($decoded) ? $decoded : null;
+//     }
+//
+//     public function saveUserDeliveryAddress(string $userId, array $address): void
+//     {
+//         $json = json_encode($address, JSON_UNESCAPED_UNICODE);
+//         $this->pdo->prepare('UPDATE users SET delivery_json = ? WHERE id = ?')->execute([$json, $userId]);
 //     }
 //
 //     public function createOrder(string $userId, array $customer, array $items, int $totalCents): array

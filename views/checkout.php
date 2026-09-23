@@ -30,7 +30,7 @@
 //                                type="text"
 //                                maxlength="100"
 //                                autocomplete="name"
-//                                value="<?= e($user['name']) ?>"
+//                                value="<?= e(!empty($savedAddress['name']) ? $savedAddress['name'] : $user['name']) ?>"
 //                                required>
 //                     </label>
 //
@@ -50,6 +50,7 @@
 //                                autocomplete="off"
 //                                maxlength="14"
 //                                placeholder="000.000.000-00"
+//                                value="<?= e($savedAddress['cpf'] ?? '') ?>"
 //                                required>
 //                     </label>
 //
@@ -61,6 +62,7 @@
 //                                autocomplete="tel"
 //                                maxlength="20"
 //                                placeholder="(15) 99745-1766"
+//                                value="<?= e($savedAddress['phone'] ?? '') ?>"
 //                                required>
 //                     </label>
 //
@@ -72,6 +74,7 @@
 //                                autocomplete="postal-code"
 //                                maxlength="9"
 //                                placeholder="18000-000"
+//                                value="<?= e($savedAddress['zip'] ?? '') ?>"
 //                                required>
 //                     </label>
 //
@@ -82,6 +85,7 @@
 //                                maxlength="180"
 //                                autocomplete="street-address"
 //                                placeholder="Ex: Av. Dr. Afonso Vergueiro"
+//                                value="<?= e($savedAddress['address'] ?? '') ?>"
 //                                required>
 //                     </label>
 //
@@ -91,6 +95,7 @@
 //                                type="text"
 //                                maxlength="20"
 //                                placeholder="123"
+//                                value="<?= e($savedAddress['number'] ?? '') ?>"
 //                                required>
 //                     </label>
 //
@@ -99,7 +104,8 @@
 //                         <input name="complement"
 //                                type="text"
 //                                maxlength="80"
-//                                placeholder="Apto, Bloco, Casa 2">
+//                                placeholder="Apto, Bloco, Casa 2"
+//                                value="<?= e($savedAddress['complement'] ?? '') ?>">
 //                     </label>
 //
 //                     <label class="wide">
@@ -108,8 +114,19 @@
 //                                type="text"
 //                                maxlength="80"
 //                                autocomplete="address-level2"
-//                                value="Sorocaba / SP"
+//                                value="<?= e(!empty($savedAddress['city']) ? $savedAddress['city'] : 'Sorocaba / SP') ?>"
 //                                required>
+//                     </label>
+//                 </div>
+//
+//                 <div class="save-address-wrapper">
+//                     <label class="save-address-label" for="save_address">
+//                         <input type="checkbox"
+//                                name="save_address"
+//                                id="save_address"
+//                                value="1"
+//                                <?= (!empty($savedAddress) || !isset($savedAddress)) ? 'checked' : '' ?>>
+//                         <span class="save-address-text">Salvar estes dados de entrega para as próximas compras</span>
 //                     </label>
 //                 </div>
 //

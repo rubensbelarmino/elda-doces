@@ -76,7 +76,7 @@
         <div class="story-photo">
 
             <img src="<?= image_placeholder() ?>"
-                 data-base64-image="elda-morango.jpg"
+                 data-base64-image="elda-morango.webp"
                  alt="Doces artesanais e morangos frescos na vitrine da Elda Bolos e Doces em Sorocaba"
                  width="611"
                  height="645"
@@ -96,11 +96,11 @@
             <div class="signature">Feito com carinho, <strong>Elda.</strong></div>
             <div class="story-actions">
                 <a class="button button-outline button-whatsapp" href="https://wa.me/5515997451766" target="_blank" rel="noopener noreferrer">
-                    <img class="btn-whatsapp-icon" src="<?= versioned_asset('images/whatsapp-icon.svg') ?>" alt="" width="20" height="20">
+                    <img class="btn-whatsapp-icon" src="<?= versioned_asset('images/whatsapp-icon.svg') ?>" alt="Ícone do WhatsApp" role="presentation" aria-hidden="true" width="20" height="20">
                     <span>Falar no WhatsApp</span>
                 </a>
                 <a class="button button-outline button-instagram" href="https://www.instagram.com/eldabolosedoces" target="_blank" rel="noopener noreferrer">
-                    <img class="btn-instagram-icon" src="<?= versioned_asset('images/instagram-icon.svg') ?>" alt="" width="20" height="20">
+                    <img class="btn-instagram-icon" src="<?= versioned_asset('images/instagram-icon.svg') ?>" alt="Ícone do Instagram" role="presentation" aria-hidden="true" width="20" height="20">
                     <span>Veja nosso Instagram</span>
                 </a>
             </div>
@@ -120,7 +120,7 @@
         <div class="elda-gallery-grid">
             <figure class="elda-gallery-logo">
                 <img src="<?= image_placeholder() ?>"
-                     data-base64-image="elda-logo.jpg"
+                     data-base64-image="elda-logo.webp"
                      alt="Logomarca oficial da Elda Bolos e Doces Sorocaba"
                      width="600"
                      height="600"
@@ -129,7 +129,7 @@
             </figure>
             <figure>
                 <img src="<?= image_placeholder() ?>"
-                     data-base64-image="elda-chocolate.jpg"
+                     data-base64-image="elda-chocolate.webp"
                      alt="Seleção de bolos artesanais e sobremesas de chocolate nobre da confeitaria Elda"
                      width="611"
                      height="645"
@@ -139,7 +139,7 @@
             </figure>
             <figure>
                 <img src="<?= image_placeholder() ?>"
-                     data-base64-image="elda-doces.jpg"
+                     data-base64-image="elda-doces.webp"
                      alt="Variedade de doces artesanais, tortas e sobremesas para festa"
                      width="552"
                      height="645"
@@ -189,7 +189,7 @@
         </div>
         <div class="elda-contact-actions">
             <a class="button button-primary button-whatsapp" href="https://wa.me/5515997451766" target="_blank" rel="noopener noreferrer">
-                <img class="btn-whatsapp-icon" src="<?= versioned_asset('images/whatsapp-white.svg') ?>" alt="" width="20" height="20">
+                <img class="btn-whatsapp-icon" src="<?= versioned_asset('images/whatsapp-white.svg') ?>" alt="Ícone do WhatsApp" role="presentation" aria-hidden="true" width="20" height="20">
                 <span>Chamar no WhatsApp <span aria-hidden="true">↗</span></span>
             </a>
             <a class="button button-outline" href="https://www.ifood.com.br/delivery/sorocaba-sp/elda-bolos-e-doces-vila-augusta/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f" target="_blank" rel="noopener noreferrer">

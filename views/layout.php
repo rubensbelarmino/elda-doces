@@ -45,17 +45,35 @@ $ogImage = isset($metaImage) ? $metaImage : request_base_url() . versioned_asset
     <meta name="twitter:description" content="<?= e($pageDescription) ?>">
     <meta name="twitter:image" content="<?= e($ogImage) ?>">
 
-    <link rel="preload" href="<?= versioned_asset('app.css') ?>" as="style">
-    <link rel="stylesheet" href="<?= versioned_asset('app.css') ?>">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.google-analytics.com">
+    <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+
+    <link rel="preload" href="<?= versioned_asset('app.min.css') ?>" as="style">
+    <link rel="stylesheet" href="<?= versioned_asset('app.min.css') ?>">
 
     <link rel="icon" href="<?= versioned_asset('images/favicon.svg') ?>" type="image/svg+xml">
     <link rel="alternate icon" href="/favicon.ico">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
 
-    <?php $gaId = trim((string) (getenv('GOOGLE_ANALYTICS_ID') ?: 'G-ELDADOCES0')); ?>
+    <?php
+    $gaId = trim((string) (getenv('GOOGLE_ANALYTICS_ID') ?: 'G-ELDADOCES0'));
+    $gtmId = trim((string) (getenv('GOOGLE_TAG_MANAGER_ID') ?: getenv('GTM_ID') ?: 'GTM-WMK77438'));
+    ?>
+    <!-- Google Tag Manager -->
+    <script async defer nonce="<?= e($nonce) ?>">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','<?= e($gtmId) ?>');</script>
+    <!-- End Google Tag Manager -->
+
     <script async src="https://www.googletagmanager.com/gtag/js?id=<?= e($gaId) ?>"></script>
-    <script nonce="<?= e($nonce) ?>">
+    <script defer nonce="<?= e($nonce) ?>">
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
@@ -120,8 +138,11 @@ $ogImage = isset($metaImage) ? $metaImage : request_base_url() . versioned_asset
       ]
     }
     </script>
-</head>
 <body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=<?= e($gtmId) ?>"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
 
 <a class="skip-link" href="#conteudo">Pular para o conteúdo principal</a>
 
@@ -209,7 +230,7 @@ $ogImage = isset($metaImage) ? $metaImage : request_base_url() . versioned_asset
 
             <h3>Atendimento</h3>
             <a class="footer-whatsapp-link" href="https://wa.me/5515997451766" target="_blank" rel="noopener noreferrer">
-                <img src="<?= versioned_asset('images/whatsapp-icon.svg') ?>" alt="" width="18" height="18">
+                <img src="<?= versioned_asset('images/whatsapp-icon.svg') ?>" alt="Ícone do WhatsApp" role="presentation" aria-hidden="true" width="18" height="18">
                 <span>WhatsApp: (15) 99745-1766</span>
             </a>
             <a href="https://www.instagram.com/eldabolosedoces" target="_blank" rel="noopener noreferrer">Instagram: @eldabolosedoces</a>
@@ -238,6 +259,6 @@ $ogImage = isset($metaImage) ? $metaImage : request_base_url() . versioned_asset
     <span class="whatsapp-float-text">WhatsApp</span>
 </a>
 
-<script nonce="<?= e($nonce) ?>" src="<?= versioned_asset('app.js') ?>" defer></script>
+<script nonce="<?= e($nonce) ?>" src="<?= versioned_asset('app.min.js') ?>" defer></script>
 </body>
 </html>

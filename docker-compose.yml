@@ -1,81 +1,81 @@
-services:
-  db:
-    image: mysql:8.4
-    environment:
-      MYSQL_DATABASE: doce_atelier
-      MYSQL_USER: doce
-      MYSQL_PASSWORD: ${DB_PASSWORD:-doce_local_2026}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_local_2026}
-    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
-    volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD:-root_local_2026}"]
-      interval: 5s
-      timeout: 3s
-      retries: 15
-    restart: unless-stopped
-
-  app1: &php_app
-    build: .
-    environment:
-      DB_DSN: mysql:host=db;dbname=doce_atelier;charset=utf8mb4
-      DB_USER: doce
-      DB_PASSWORD: ${DB_PASSWORD:-doce_local_2026}
-      APP_KEY: ${APP_KEY:-troque-esta-chave-local-compartilhada}
-      APP_NODE: app1
-      APP_URL: ${APP_URL:-http://localhost:8080}
-      MERCADO_PAGO_ACCESS_TOKEN: ${MERCADO_PAGO_ACCESS_TOKEN:-}
-      MERCADO_PAGO_WEBHOOK_SECRET: ${MERCADO_PAGO_WEBHOOK_SECRET:-}
-      MAIL_TRANSPORT: smtp
-      SMTP_HOST: mailpit
-      SMTP_PORT: 1025
-      SMTP_ENCRYPTION: none
-    volumes:
-      - php_sessions:/var/www/html/storage/sessions
-      - php_runtime:/var/www/html/storage/runtime
-    depends_on:
-      db:
-        condition: service_healthy
-      mailpit:
-        condition: service_started
-    restart: unless-stopped
-
-  app2:
-    <<: *php_app
-    environment:
-      DB_DSN: mysql:host=db;dbname=doce_atelier;charset=utf8mb4
-      DB_USER: doce
-      DB_PASSWORD: ${DB_PASSWORD:-doce_local_2026}
-      APP_KEY: ${APP_KEY:-troque-esta-chave-local-compartilhada}
-      APP_NODE: app2
-      APP_URL: ${APP_URL:-http://localhost:8080}
-      MERCADO_PAGO_ACCESS_TOKEN: ${MERCADO_PAGO_ACCESS_TOKEN:-}
-      MERCADO_PAGO_WEBHOOK_SECRET: ${MERCADO_PAGO_WEBHOOK_SECRET:-}
-      MAIL_TRANSPORT: smtp
-      SMTP_HOST: mailpit
-      SMTP_PORT: 1025
-      SMTP_ENCRYPTION: none
-
-  load_balancer:
-    image: nginx:1.27-alpine
-    ports:
-      - "8080:80"
-    volumes:
-      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./public:/var/www/html/public:ro
-    depends_on:
-      - app1
-      - app2
-    restart: unless-stopped
-
-  mailpit:
-    image: axllent/mailpit:v1.27
-    ports:
-      - "8025:8025"
-    restart: unless-stopped
-
-volumes:
-  mysql_data:
-  php_sessions:
-  php_runtime:
+# services:
+#   db:
+#     image: mysql:8.4
+#     environment:
+#       MYSQL_DATABASE: doce_atelier
+#       MYSQL_USER: doce
+#       MYSQL_PASSWORD: ${DB_PASSWORD:-doce_local_2026}
+#       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_local_2026}
+#     command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+#     volumes:
+#       - mysql_data:/var/lib/mysql
+#     healthcheck:
+#       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD:-root_local_2026}"]
+#       interval: 5s
+#       timeout: 3s
+#       retries: 15
+#     restart: unless-stopped
+#
+#   app1: &php_app
+#     build: .
+#     environment:
+#       DB_DSN: mysql:host=db;dbname=doce_atelier;charset=utf8mb4
+#       DB_USER: doce
+#       DB_PASSWORD: ${DB_PASSWORD:-doce_local_2026}
+#       APP_KEY: ${APP_KEY:-troque-esta-chave-local-compartilhada}
+#       APP_NODE: app1
+#       APP_URL: ${APP_URL:-http://localhost:8080}
+#       MERCADO_PAGO_ACCESS_TOKEN: ${MERCADO_PAGO_ACCESS_TOKEN:-}
+#       MERCADO_PAGO_WEBHOOK_SECRET: ${MERCADO_PAGO_WEBHOOK_SECRET:-}
+#       MAIL_TRANSPORT: smtp
+#       SMTP_HOST: mailpit
+#       SMTP_PORT: 1025
+#       SMTP_ENCRYPTION: none
+#     volumes:
+#       - php_sessions:/var/www/html/storage/sessions
+#       - php_runtime:/var/www/html/storage/runtime
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#       mailpit:
+#         condition: service_started
+#     restart: unless-stopped
+#
+#   app2:
+#     <<: *php_app
+#     environment:
+#       DB_DSN: mysql:host=db;dbname=doce_atelier;charset=utf8mb4
+#       DB_USER: doce
+#       DB_PASSWORD: ${DB_PASSWORD:-doce_local_2026}
+#       APP_KEY: ${APP_KEY:-troque-esta-chave-local-compartilhada}
+#       APP_NODE: app2
+#       APP_URL: ${APP_URL:-http://localhost:8080}
+#       MERCADO_PAGO_ACCESS_TOKEN: ${MERCADO_PAGO_ACCESS_TOKEN:-}
+#       MERCADO_PAGO_WEBHOOK_SECRET: ${MERCADO_PAGO_WEBHOOK_SECRET:-}
+#       MAIL_TRANSPORT: smtp
+#       SMTP_HOST: mailpit
+#       SMTP_PORT: 1025
+#       SMTP_ENCRYPTION: none
+#
+#   load_balancer:
+#     image: nginx:1.27-alpine
+#     ports:
+#       - "8080:80"
+#     volumes:
+#       - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+#       - ./public:/var/www/html/public:ro
+#     depends_on:
+#       - app1
+#       - app2
+#     restart: unless-stopped
+#
+#   mailpit:
+#     image: axllent/mailpit:v1.27
+#     ports:
+#       - "8025:8025"
+#     restart: unless-stopped
+#
+# volumes:
+#   mysql_data:
+#   php_sessions:
+#   php_runtime:

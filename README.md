@@ -5,7 +5,9 @@
 > Desenvolvido com foco em **HTML5 Semântico**, **CSS3 Nativo com Design System** e **JavaScript ES6+ Vanilla Puro** (Zero dependências no frontend).
 
 ---
-
+## 📜 License(LICENSE)
+[![MIT License](https://img.shields.io/badge/License-MIT-red.svg)](https://github.com/rubensbelarmino/elda-doces/blob/main/LICENSE)
+---
 ## 📑 Índice Geral
 
 1. [Visão Geral e Identidade do Projeto](#-visão-geral-e-identidade-do-projeto)

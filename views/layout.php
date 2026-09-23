@@ -62,7 +62,7 @@ $ogImage = isset($metaImage) ? $metaImage : request_base_url() . versioned_asset
 
     <?php
     $gaId = trim((string) (getenv('GOOGLE_ANALYTICS_ID') ?: 'G-ELDADOCES0'));
-    $gtmId = trim((string) (getenv('GOOGLE_TAG_MANAGER_ID') ?: getenv('GTM_ID') ?: 'GTM-WMK77438'));
+    $gtmId = trim((string) (getenv('GOOGLE_TAG_MANAGER_ID') ?: getenv('GTM_ID') ?: 'GTM-T98GCPGN'));
     ?>
     <!-- Google Tag Manager -->
     <script async defer nonce="<?= e($nonce) ?>">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':

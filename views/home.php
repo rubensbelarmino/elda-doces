@@ -64,9 +64,14 @@
         </div>
 
         <div class="product-grid">
-            <?php foreach ($products as $product): ?>
-                <?php require __DIR__ . '/partials/product-card.php'; ?>
-            <?php endforeach; ?>
+            <?php
+            $homeIndex = 0;
+            foreach ($products as $product):
+                $imagePriority = $homeIndex < 4;
+                require __DIR__ . '/partials/product-card.php';
+                $homeIndex++;
+            endforeach;
+            ?>
         </div>
     </div>
 </section>
@@ -75,7 +80,7 @@
     <div class="container story-grid">
         <div class="story-photo">
 
-            <img src="<?= image_placeholder() ?>"
+            <img src="<?= versioned_asset('images/elda-morango.webp') ?>"
                  data-base64-image="elda-morango.webp"
                  alt="Doces artesanais e morangos frescos na vitrine da Elda Bolos e Doces em Sorocaba"
                  width="611"
@@ -119,7 +124,7 @@
 
         <div class="elda-gallery-grid">
             <figure class="elda-gallery-logo">
-                <img src="<?= image_placeholder() ?>"
+                <img src="<?= versioned_asset('images/elda-logo.webp') ?>"
                      data-base64-image="elda-logo.webp"
                      alt="Logomarca oficial da Elda Bolos e Doces Sorocaba"
                      width="600"
@@ -128,7 +133,7 @@
                      decoding="async">
             </figure>
             <figure>
-                <img src="<?= image_placeholder() ?>"
+                <img src="<?= versioned_asset('images/elda-chocolate.webp') ?>"
                      data-base64-image="elda-chocolate.webp"
                      alt="Seleção de bolos artesanais e sobremesas de chocolate nobre da confeitaria Elda"
                      width="611"
@@ -138,7 +143,7 @@
                 <figcaption>Chocolate nobre em todas as formas</figcaption>
             </figure>
             <figure>
-                <img src="<?= image_placeholder() ?>"
+                <img src="<?= versioned_asset('images/elda-doces.webp') ?>"
                      data-base64-image="elda-doces.webp"
                      alt="Variedade de doces artesanais, tortas e sobremesas para festa"
                      width="552"

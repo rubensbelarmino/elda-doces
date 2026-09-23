@@ -33,11 +33,13 @@
                             <?php $product = $line['product']; ?>
                             <article class="cart-line">
                                 <a href="/produto/<?= e($product['slug']) ?>" aria-label="Ver <?= e($product['name']) ?>">
-                                    <img src="<?= image_placeholder() ?>"
+                                    <img src="<?= versioned_asset('images/' . $product['image']) ?>"
                                          data-base64-image="<?= e($product['image']) ?>"
                                          alt="<?= e($product['name']) ?>"
                                          width="90"
-                                         height="70">
+                                         height="70"
+                                         loading="lazy"
+                                         decoding="async">
                                 </a>
                                 <div>
                                     <span class="eyebrow"><?= e($product['category']) ?></span>

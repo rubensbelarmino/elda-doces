@@ -87,67 +87,118 @@
       .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
   });
 
-  const imageRequests = new Map();
-  const readSession = (key) => { try { return window.sessionStorage.getItem(key); } catch { return null; } };
-  const writeSession = (key, value) => { try { window.sessionStorage.setItem(key, value); } catch {  } };
+  const preloadedImages = new Set();
 
-  
-  const loadBase64Image = (img) => {
-    if (img.dataset.imageRequested === '1') return;
-    img.dataset.imageRequested = '1';
-    const filename = img.dataset.base64Image;
-    if (!filename || !/^[a-zA-Z0-9._-]+\.(jpg|jpeg|png|webp)$/i.test(filename)) return;
-
-    const key = `doce:image:${filename}`;
-    const cached = readSession(key);
-    if (cached) {
-      img.src = cached;
-      img.classList.add('is-loaded');
-      return;
-    }
-
-    if (!imageRequests.has(filename)) {
-      imageRequests.set(filename, fetch(`/api/imagens/${encodeURIComponent(filename)}`, { 
-        credentials: 'same-origin', 
-        cache: 'no-store' 
-      })
-      .then((response) => {
-        if (!response.ok) throw new Error('Imagem indisponível');
-        return response.json();
-      })
-      .then(({ data }) => {
-        if (typeof data !== 'string' || !data.startsWith('data:image/')) throw new Error('Imagem inválida');
-        writeSession(key, data);
-        return data;
-      }));
-    }
-
-    imageRequests.get(filename)
-      .then((data) => { 
-        img.src = data; 
-        img.classList.add('is-loaded'); 
-      })
-      .catch(() => {
-        img.closest('.product-image, .detail-image, .cart-line, .checkout-line, .product-cell')?.classList.add('image-error');
-      });
+  const preloadImageSrc = (src) => {
+    if (!src || preloadedImages.has(src) || src.startsWith('data:')) return;
+    preloadedImages.add(src);
+    try {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = src;
+      document.head.appendChild(link);
+    } catch {}
+    const pre = new Image();
+    pre.src = src;
   };
 
-  const imageElements = [...document.querySelectorAll('img[data-base64-image]')];
+  const markImageLoaded = (img) => {
+    img.classList.add('is-loaded');
+  };
 
-  imageElements.filter((img) => img.dataset.imagePriority === 'high').forEach(loadBase64Image);
+  const applyImageSource = (img) => {
+    const filename = img.dataset.base64Image;
+    if (!img.src || img.src.startsWith('data:image/svg') || img.src.startsWith('data:image/webp')) {
+      if (filename && /^[a-zA-Z0-9._-]+\.(jpg|jpeg|png|webp)$/i.test(filename)) {
+        img.src = `/assets/images/${encodeURIComponent(filename)}`;
+      }
+    }
+  };
 
+  const setupImage = (img) => {
+    applyImageSource(img);
+
+    if (img.complete && img.naturalWidth > 0) {
+      markImageLoaded(img);
+    } else {
+      img.addEventListener('load', () => markImageLoaded(img), { once: true });
+      img.addEventListener('error', () => {
+        const filename = img.dataset.base64Image;
+        if (filename && !img.dataset.apiFallback) {
+          img.dataset.apiFallback = '1';
+          fetch(`/api/imagens/${encodeURIComponent(filename)}`)
+            .then((r) => (r.ok ? r.json() : Promise.reject()))
+            .then(({ data }) => {
+              if (data) {
+                img.src = data;
+                markImageLoaded(img);
+              }
+            })
+            .catch(() => {
+              img.closest('.product-image, .detail-image, .cart-line, .checkout-line, .product-cell')?.classList.add('image-error');
+            });
+        }
+      }, { once: true });
+    }
+  };
+
+  const imageElements = [...document.querySelectorAll('img[data-base64-image], .product-image img, .detail-image img, .cart-line img, .checkout-line img, .product-cell img')];
+  imageElements.forEach(setupImage);
+
+  // Eagerly preload top/priority images
+  imageElements
+    .filter((img) => img.dataset.imagePriority === 'high' || img.getAttribute('loading') === 'eager')
+    .forEach((img) => {
+      if (img.loading === 'lazy') img.loading = 'eager';
+      if (img.src) preloadImageSrc(img.src);
+    });
+
+  // Anticipatory IntersectionObserver: preload images 1500px in advance before scrolling into view
   if ('IntersectionObserver' in window) {
-    const imageObserver = new IntersectionObserver((entries, observer) => {
+    const anticipatoryObserver = new IntersectionObserver((entries, observer) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
-        loadBase64Image(entry.target);
-        observer.unobserve(entry.target);
+        const img = entry.target;
+        if (img.loading === 'lazy') {
+          img.loading = 'eager';
+        }
+        if (img.src && !img.complete) {
+          preloadImageSrc(img.src);
+        }
+        observer.unobserve(img);
       });
-    }, { rootMargin: '420px 0px' });
+    }, { rootMargin: '1500px 0px' });
 
-    imageElements.filter((img) => img.dataset.imagePriority !== 'high').forEach((img) => imageObserver.observe(img));
+    imageElements.forEach((img) => {
+      if (!img.complete) {
+        anticipatoryObserver.observe(img);
+      }
+    });
+  }
+
+  // Anticipatory Idle Preloader: proactively warm up remaining images in background during idle time
+  const idleQueue = [...imageElements].filter((img) => !img.complete);
+  const drainIdlePreload = (deadline) => {
+    while (idleQueue.length > 0 && (!deadline || deadline.timeRemaining() > 8)) {
+      const nextImg = idleQueue.shift();
+      if (nextImg && nextImg.src && !nextImg.complete && !preloadedImages.has(nextImg.src)) {
+        preloadImageSrc(nextImg.src);
+      }
+    }
+    if (idleQueue.length > 0) {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(drainIdlePreload, { timeout: 2000 });
+      } else {
+        window.setTimeout(drainIdlePreload, 250);
+      }
+    }
+  };
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(drainIdlePreload, { timeout: 1500 });
   } else {
-    imageElements.forEach(loadBase64Image);
+    window.setTimeout(drainIdlePreload, 300);
   }
 
   document.querySelector('[data-copy-pix]')?.addEventListener('click', async (event) => {

@@ -43,7 +43,7 @@
                 $catalogIndex = 0;
                 foreach ($products as $product) {
 
-                    $imagePriority = $catalogIndex < 4;
+                    $imagePriority = $catalogIndex < 6;
                     require __DIR__ . '/partials/product-card.php';
                     $catalogIndex++;
                 }

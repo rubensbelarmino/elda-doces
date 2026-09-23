@@ -76,9 +76,11 @@ $inStock = (int) $product['stock'] > 0;
         <div class="product-detail-grid">
 
             <div class="detail-image">
-                <img src="<?= image_placeholder() ?>"
+                <img src="<?= versioned_asset('images/' . $product['image']) ?>"
                      data-base64-image="<?= e($product['image']) ?>"
                      alt="<?= e($product['name']) ?> — <?= e($product['category']) ?> da Elda Bolos e Doces em Sorocaba"
+                     loading="eager"
+                     fetchpriority="high"
                      width="900"
                      height="700">
                 <span class="product-badge"><?= e($product['category']) ?></span>

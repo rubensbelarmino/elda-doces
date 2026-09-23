@@ -136,11 +136,13 @@
 
                 <?php foreach ($cart['items'] as $line): ?>
                     <div class="checkout-line">
-                        <img src="<?= image_placeholder() ?>"
+                        <img src="<?= versioned_asset('images/' . $line['product']['image']) ?>"
                              data-base64-image="<?= e($line['product']['image']) ?>"
                              alt="<?= e($line['product']['name']) ?>"
                              width="60"
-                             height="50">
+                             height="50"
+                             loading="lazy"
+                             decoding="async">
                         <div>
                             <strong><?= e($line['product']['name']) ?></strong>
                             <small><?= (int) $line['quantity'] ?> × <?= money((int) $line['product']['price_cents']) ?></small>

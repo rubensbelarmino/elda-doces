@@ -1,11 +1,11 @@
 <article class="product-card" aria-label="<?= e($product['name']) ?>">
 
     <a class="product-image" href="/produto/<?= e($product['slug']) ?>">
-        <img src="<?= image_placeholder() ?>"
+        <img src="<?= versioned_asset('images/' . $product['image']) ?>"
              data-base64-image="<?= e($product['image']) ?>"
              alt="<?= e($product['name']) ?> — Doceria artesanal Elda Bolos e Doces"
              loading="<?= !empty($imagePriority) ? 'eager' : 'lazy' ?>"
-             <?= !empty($imagePriority) ? ' fetchpriority="high" data-image-priority="high"' : '' ?>
+             <?= !empty($imagePriority) ? ' fetchpriority="high" data-image-priority="high"' : ' decoding="async"' ?>
              width="900"
              height="700">
 

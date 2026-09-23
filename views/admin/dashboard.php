@@ -151,11 +151,13 @@ $statusLabels = [
                         <?php foreach ($products as $product): ?>
                             <tr>
                                 <td class="product-cell">
-                                    <img src="<?= image_placeholder() ?>"
+                                    <img src="<?= versioned_asset('images/' . $product['image']) ?>"
                                          data-base64-image="<?= e($product['image']) ?>"
                                          alt="<?= e($product['name']) ?>"
                                          width="48"
-                                         height="40">
+                                         height="40"
+                                         loading="lazy"
+                                         decoding="async">
                                     <div>
                                         <strong><?= e($product['name']) ?></strong>
                                         <small><?= e($product['portion']) ?></small>

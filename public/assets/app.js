@@ -300,4 +300,18 @@
       });
     }
   }
+
+  document.querySelectorAll('.password-toggle').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const input = btn.closest('.password-wrapper')?.querySelector('input');
+      if (!input) return;
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      btn.classList.toggle('is-visible', isPassword);
+      btn.setAttribute('aria-label', isPassword ? 'Ocultar senha' : 'Ver senha');
+      btn.setAttribute('title', isPassword ? 'Ocultar senha' : 'Ver senha');
+      input.focus();
+    });
+  });
 })();

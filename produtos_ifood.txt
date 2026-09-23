@@ -1,0 +1,444 @@
+=====================================================================================
+                  CATÁLOGO COMPLETO DE PRODUTOS - IFOOD
+               ESTABELECIMENTO: ELDA BOLOS E DOCES
+=====================================================================================
+Nome do Estabelecimento : Elda Bolos e Doces
+Endereço / Região       : Vila Augusta, Sorocaba - SP
+Avaliação iFood         : 4.9 estrelas
+Pedido Mínimo           : R$ 20,00
+Link da Loja no iFood   : https://www.ifood.com.br/delivery/sorocaba-sp/elda-bolos-e-doces-vila-augusta/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f
+Data da Coleta          : 22/09/2026 15:40:45
+Total de Categorias     : 12
+Total de Produtos       : 37
+Diretório de Imagens    : pasta 'imagens/'
+=====================================================================================
+
+DISTRIBUIÇÃO DE PRODUTOS POR CATEGORIA:
+--------------------------------------------------
+  • Bombons de pote                :  2 produto(s)
+  • Tortas                         :  8 produto(s)
+  • Cestinha                       :  1 produto(s)
+  • Potinhos                       :  4 produto(s)
+  • Tacinhas                       :  1 produto(s)
+  • Cheesecake                     :  3 produto(s)
+  • Pavê                           :  3 produto(s)
+  • Camafeu ou coxinha             :  2 produto(s)
+  • Copos da Felicidade            :  4 produto(s)
+  • Fatias de bolo                 :  5 produto(s)
+  • Bebidas                        :  3 produto(s)
+  • Ofertas (18)                   :  1 produto(s)
+--------------------------------------------------
+  TOTAL GERAL                    : 37 produtos
+
+=====================================================================================
+                  LISTAGEM DETALHADA ITEM POR ITEM
+=====================================================================================
+
+
+#####################################################################
+### CATEGORIA: BOMBONS DE POTE (2 itens)
+#####################################################################
+
+[ITEM 01 de 37]
+Nome do Produto   : Bombom de Kinder bueno
+Categoria         : Bombons de pote
+Preço             : R$ 23,90
+Porção            : Serve 1 pessoa
+Descrição         : Brigadeiro branco cremoso , pedaços de Kinder bueno, Nutella,finalizado com ganache de chocolate
+Arquivo de Imagem : imagens/01_bombom_de_kinder_bueno.jpg (21.4 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202503051610_2KF0_i.jpg
+-------------------------------------------------------------------------------------
+[ITEM 02 de 37]
+Nome do Produto   : Bombom de Uva
+Categoria         : Bombons de pote
+Preço             : R$ 20,90
+Porção            : Serve 1 pessoa
+Descrição         : Brigadeiro branco cremoso com uva e ganache
+Arquivo de Imagem : imagens/02_bombom_de_uva.jpg (36.0 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202403291259_7WW7_i.jpg
+-------------------------------------------------------------------------------------
+
+#####################################################################
+### CATEGORIA: TORTAS (8 itens)
+#####################################################################
+
+[ITEM 03 de 37]
+Nome do Produto   : Torta charge
+Categoria         : Tortas
+Preço             : R$ 28,90
+Porção            : Serve 1 pessoa
+Descrição         : Base de biscoitos 
+Recheio chocolate com amendoim 
+E ganache com muito sabor.
+Arquivo de Imagem : imagens/03_torta_charge.jpg (37.6 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202502241238_GL6U_i.jpg
+-------------------------------------------------------------------------------------
+[ITEM 04 de 37]
+Nome do Produto   : Torta Merengue de Morango
+Categoria         : Tortas
+Preço             : R$ 28,90
+Porção            : Serve 1 pessoa
+Descrição         : Base crocante com brigadeiro branco , morangos fresco finalizado com suspiros
+Arquivo de Imagem : imagens/04_torta_merengue_de_morango.jpg (28.1 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202502241254_4JIM_i.jpg
+-------------------------------------------------------------------------------------
+[ITEM 05 de 37]
+Nome do Produto   : Torta dos Anjos
+Categoria         : Tortas
+Preço             : R$ 28,90
+Porção            : Serve 1 pessoa
+Descrição         : Base de coco,creme e coco
+Arquivo de Imagem : imagens/05_torta_dos_anjos.jpg (21.8 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202502241300_08EL_i.jpg
+-------------------------------------------------------------------------------------
+[ITEM 06 de 37]
+Nome do Produto   : Torta Oreo com Morango
+Categoria         : Tortas
+Preço             : R$ 29,90
+Porção            : Serve 1 pessoa
+Descrição         : Base crocante e Nutella, brigadeiro branco com pedaços de Oreo e morangos frescos finalizado com ganache de chocolate
+Arquivo de Imagem : imagens/06_torta_oreo_com_morango.jpg (43.5 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202502241302_5E6R_i.jpg
+-------------------------------------------------------------------------------------
+[ITEM 07 de 37]
+Nome do Produto   : Torta de Paçoca com Brigadeiro
+Categoria         : Tortas
+Preço             : R$ 26,90
+Porção            : Serve 1 pessoa
+Descrição         : Base crocante,brigadeiro tradicional com brigadeiro de paçoca
+Arquivo de Imagem : imagens/07_torta_de_pacoca_com_brigadeiro.jpg (31.2 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202502261224_NLQ1_i.jpg
+-------------------------------------------------------------------------------------
+[ITEM 08 de 37]
+Nome do Produto   : Torta de nozes com baba de moça
+Categoria         : Tortas
+Preço             : R$ 27,90
+Porção            : Porção individual padrão / Não especificada
+Descrição         : Base de bolacha , brigadeiro branco com nozes e baba de moça
+Arquivo de Imagem : imagens/08_torta_de_nozes_com_baba_de_moca.jpg (59.9 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202506060926_8041_i.jpg
+-------------------------------------------------------------------------------------
+[ITEM 09 de 37]
+Nome do Produto   : Torta de Kit Kat com morango
+Categoria         : Tortas
+Preço             : R$ 29,90
+Porção            : Porção individual padrão / Não especificada
+Descrição         : Sem descrição complementar informada na loja
+Arquivo de Imagem : imagens/09_torta_de_kit_kat_com_morango.jpg (63.9 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202507220936_8G8U_i.jpg
+-------------------------------------------------------------------------------------
+[ITEM 10 de 37]
+Nome do Produto   : Torta de ferrero rocher com morango
+Categoria         : Tortas
+Preço             : R$ 31,90
+Porção            : Porção individual padrão / Não especificada
+Descrição         : Sem descrição complementar informada na loja
+Arquivo de Imagem : imagens/10_torta_de_ferrero_rocher_com_morango.jpg (86.8 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202507231526_34E3_i.jpg
+-------------------------------------------------------------------------------------
+
+#####################################################################
+### CATEGORIA: CESTINHA (1 itens)
+#####################################################################
+
+[ITEM 11 de 37]
+Nome do Produto   : Cestinha de Brownie com Nutella e Morango
+Categoria         : Cestinha
+Preço             : R$ 24,90
+Porção            : Serve 1 pessoa
+Descrição         : Casquinha de sorvete banhado no chocolate ao leite , Ninho , brownie e morangos frescos
+Arquivo de Imagem : imagens/11_cestinha_de_brownie_com_nutella_e_morango.jpg (88.4 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202406241644_W017_i.jpg
+-------------------------------------------------------------------------------------
+
+#####################################################################
+### CATEGORIA: POTINHOS (4 itens)
+#####################################################################
+
+[ITEM 12 de 37]
+Nome do Produto   : Potinho de bolo de Kinder bueno
+Categoria         : Potinhos
+Preço             : R$ 24,50
+Porção            : Porção individual padrão / Não especificada
+Descrição         : Sem descrição complementar informada na loja
+Arquivo de Imagem : imagens/12_potinho_de_bolo_de_kinder_bueno.jpeg (46.7 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202602032135_AKL6_.jpeg
+-------------------------------------------------------------------------------------
+[ITEM 13 de 37]
+Nome do Produto   : Potinho de bolo doce de leite com brigadeiro
+Categoria         : Potinhos
+Preço             : R$ 18,90
+Porção            : Porção individual padrão / Não especificada
+Descrição         : Sem descrição complementar informada na loja
+Arquivo de Imagem : imagens/13_potinho_de_bolo_doce_de_leite_com_brigadeiro.jpeg (65.8 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202602201842_PAUX_.jpeg
+-------------------------------------------------------------------------------------
+[ITEM 14 de 37]
+Nome do Produto   : Potinho de Brigadeiro com Ninho
+Categoria         : Potinhos
+Preço             : R$ 18,90
+Porção            : Serve 1 pessoa
+Descrição         : Bolo de chocolate , brigadeiro tradicional com mousse de Ninho
+Arquivo de Imagem : imagens/14_potinho_de_brigadeiro_com_ninho.jpg (37.6 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202206281248_7UQX_i.jpg
+-------------------------------------------------------------------------------------
+[ITEM 15 de 37]
+Nome do Produto   : Potinho de Brigadeiro com Brigadeiro Rosa
+Categoria         : Potinhos
+Preço             : R$ 18,90
+Porção            : Serve 1 pessoa
+Descrição         : Massa chocolate com brigadeiro tradicional com brigadeiro rosa
+Arquivo de Imagem : imagens/15_potinho_de_brigadeiro_com_brigadeiro_rosa.jpg (63.9 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202406071414_X2V4_i.jpg
+-------------------------------------------------------------------------------------
+
+#####################################################################
+### CATEGORIA: TACINHAS (1 itens)
+#####################################################################
+
+[ITEM 16 de 37]
+Nome do Produto   : Tacinha de brownie com morango
+Categoria         : Tacinhas
+Preço             : R$ 19,90
+Porção            : Porção individual padrão / Não especificada
+Descrição         : Brigadeiro branco e preto com brownie e morangos frescos
+Arquivo de Imagem : imagens/16_tacinha_de_brownie_com_morango.jpg (61.0 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202503071455_D2N8_i.jpg
+-------------------------------------------------------------------------------------
+
+#####################################################################
+### CATEGORIA: CHEESECAKE (3 itens)
+#####################################################################
+
+[ITEM 17 de 37]
+Nome do Produto   : Chessecake de Nutella
+Categoria         : Cheesecake
+Preço             : R$ 30,90
+Porção            : Porção individual padrão / Não especificada
+Descrição         : Sem descrição complementar informada na loja
+Arquivo de Imagem : imagens/17_chessecake_de_nutella.jpeg (112.0 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202608081442_KJB4_.jpeg
+-------------------------------------------------------------------------------------
+[ITEM 18 de 37]
+Nome do Produto   : Chessecake de Kinder Bueno
+Categoria         : Cheesecake
+Preço             : R$ 31,90
+Porção            : Serve 1 pessoa
+Descrição         : Base crocante,chocolate , cream cheese e pedaços de Kinder bueno
+Arquivo de Imagem : imagens/18_chessecake_de_kinder_bueno.jpg (45.2 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202502261252_1A8P_i.jpg
+-------------------------------------------------------------------------------------
+[ITEM 19 de 37]
+Nome do Produto   : Chessecake de Oreo
+Categoria         : Cheesecake
+Preço             : R$ 28,90
+Porção            : Serve 1 pessoa
+Descrição         : Base crocante ,chocolate com Nutella, pedaços de Oreo e cream cheese
+Arquivo de Imagem : imagens/19_chessecake_de_oreo.jpg (27.2 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202502261257_KJTT_i.jpg
+-------------------------------------------------------------------------------------
+
+#####################################################################
+### CATEGORIA: PAVÊ (3 itens)
+#####################################################################
+
+[ITEM 20 de 37]
+Nome do Produto   : Pavê de limão com brigadeiro
+Categoria         : Pavê
+Preço             : R$ 27,90
+Porção            : Porção individual padrão / Não especificada
+Descrição         : Sem descrição complementar informada na loja
+Arquivo de Imagem : imagens/20_pave_de_limao_com_brigadeiro.jpeg (122.0 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202609131258_MCZ4_.jpeg
+-------------------------------------------------------------------------------------
+[ITEM 21 de 37]
+Nome do Produto   : Pavê de maracujá com chocolate
+Categoria         : Pavê
+Preço             : R$ 26,90
+Porção            : Porção individual padrão / Não especificada
+Descrição         : Mousse de maracujá com ganache de chocolate
+Arquivo de Imagem : imagens/21_pave_de_maracuja_com_chocolate.jpg (92.5 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202503271523_V551_i.jpg
+-------------------------------------------------------------------------------------
+[ITEM 22 de 37]
+Nome do Produto   : Pavê de Pistache com Frutas Vermelhas
+Categoria         : Pavê
+Preço             : R$ 28,90
+Porção            : Serve 2 pessoas
+Descrição         : Mousse de Ninho,bolacha champanhe ,brigadeiro de pistache e geleia de frutas vermelhas
+Arquivo de Imagem : imagens/22_pave_de_pistache_com_frutas_vermelhas.jpg (66.9 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202502261235_10Q5_i.jpg
+-------------------------------------------------------------------------------------
+
+#####################################################################
+### CATEGORIA: CAMAFEU OU COXINHA (2 itens)
+#####################################################################
+
+[ITEM 23 de 37]
+Nome do Produto   : Camafeu cravejado de morango
+Categoria         : Camafeu ou coxinha
+Preço             : R$ 19,90
+Porção            : Porção individual padrão / Não especificada
+Descrição         : Sem descrição complementar informada na loja
+Arquivo de Imagem : imagens/23_camafeu_cravejado_de_morango.jpeg (89.9 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202608221752_H1E3_.jpeg
+-------------------------------------------------------------------------------------
+[ITEM 24 de 37]
+Nome do Produto   : Charlotte
+Categoria         : Camafeu ou coxinha
+Preço             : R$ 20,90
+Porção            : Serve 1 pessoa
+Descrição         : Feita com bolacha champanhe , creme suave e morangos frescos
+Arquivo de Imagem : imagens/24_charlotte.jpg (95.2 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202405041452_DVIM_i.jpg
+-------------------------------------------------------------------------------------
+
+#####################################################################
+### CATEGORIA: COPOS DA FELICIDADE (4 itens)
+#####################################################################
+
+[ITEM 25 de 37]
+Nome do Produto   : Copo da felicidade Casadinho
+Categoria         : Copos da Felicidade
+Preço             : R$ 34,90
+Porção            : Serve 1 pessoa
+Descrição         : Massa de chocolate, brigadeiro ao leite e brigadeiro branco.
+Arquivo de Imagem : imagens/25_copo_da_felicidade_casadinho.jpg (16.2 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202503051455_1563_i.jpg
+-------------------------------------------------------------------------------------
+[ITEM 26 de 37]
+Nome do Produto   : Copo da felicidade de casadinho com brownie
+Categoria         : Copos da Felicidade
+Preço             : R$ 31,90
+Porção            : Porção individual padrão / Não especificada
+Descrição         : Sem descrição complementar informada na loja
+Arquivo de Imagem : imagens/26_copo_da_felicidade_de_casadinho_com_brownie.jpeg (72.0 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202601131555_1KW4_.jpeg
+-------------------------------------------------------------------------------------
+[ITEM 27 de 37]
+Nome do Produto   : Copo de Brigadeiro Branco com Morango
+Categoria         : Copos da Felicidade
+Preço             : R$ 29,99
+Porção            : Serve 1 pessoa
+Descrição         : Massa branca, recheio brig. Branco cremoso e pedaços de morango frescos.
+Arquivo de Imagem : imagens/27_copo_de_brigadeiro_branco_com_morango.jpeg (33.3 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202011242109_dcZF_.jpeg
+-------------------------------------------------------------------------------------
+[ITEM 28 de 37]
+Nome do Produto   : Copo da felicidade brownie com uva Ninho mousse e brigadeiro
+Categoria         : Copos da Felicidade
+Preço             : R$ 29,90
+Porção            : Porção individual padrão / Não especificada
+Descrição         : Sem descrição complementar informada na loja
+Arquivo de Imagem : imagens/28_copo_da_felicidade_brownie_com_uva_ninho_mousse_e_brigadeiro.jpg (98.1 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202509111713_676H_i.jpg
+-------------------------------------------------------------------------------------
+
+#####################################################################
+### CATEGORIA: FATIAS DE BOLO (5 itens)
+#####################################################################
+
+[ITEM 29 de 37]
+Nome do Produto   : Fatia de Bolo de Brigadeiro com Baba de Moça
+Categoria         : Fatias de bolo
+Preço             : R$ 26,95
+Porção            : Serve 1 pessoa
+Descrição         : Massa de chocolate 
+Recheio brigadeiro ao leite  e uma camada de baba de moça
+Arquivo de Imagem : imagens/29_fatia_de_bolo_de_brigadeiro_com_baba_de_moca.jpg (155.2 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202503051238_AJ22_i.jpg
+-------------------------------------------------------------------------------------
+[ITEM 30 de 37]
+Nome do Produto   : Fatia de bolo laka com morango
+Categoria         : Fatias de bolo
+Preço             : R$ 27,95
+Porção            : Serve 1 pessoa
+Descrição         : Massa de pao de lo branca
+Recheio laka com morango
+Arquivo de Imagem : imagens/30_fatia_de_bolo_laka_com_morango.jpeg (19.3 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202101181505_5kzr_.jpeg
+-------------------------------------------------------------------------------------
+[ITEM 31 de 37]
+Nome do Produto   : Fatia de bolo Suflair
+Categoria         : Fatias de bolo
+Preço             : R$ 27,95
+Porção            : Serve 1 pessoa
+Descrição         : Massa de chocolate 
+Recheio musse de chocolate e pedaços de suflair
+Arquivo de Imagem : imagens/31_fatia_de_bolo_suflair.jpeg (21.9 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202101081705_373y_.jpeg
+-------------------------------------------------------------------------------------
+[ITEM 32 de 37]
+Nome do Produto   : Fatia Suflair com Ninho
+Categoria         : Fatias de bolo
+Preço             : R$ 27,95
+Porção            : Serve 1 pessoa
+Descrição         : Massa chocolate, mousse de chocolate com pedaços de suflair e mousse de Ninho
+Arquivo de Imagem : imagens/32_fatia_suflair_com_ninho.jpeg (51.1 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202104011413_jjlZ_.jpeg
+-------------------------------------------------------------------------------------
+[ITEM 33 de 37]
+Nome do Produto   : Fatia Suflair com Ninho e Morango
+Categoria         : Fatias de bolo
+Preço             : R$ 27,95
+Porção            : Serve 1 pessoa
+Descrição         : Massa chocolate, mousse de chocolate com pedaços de suflair, com mousse de Ninho e morangos
+Arquivo de Imagem : imagens/33_fatia_suflair_com_ninho_e_morango.jpg (89.7 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202106171555_E6Y1_i.jpg
+-------------------------------------------------------------------------------------
+
+#####################################################################
+### CATEGORIA: BEBIDAS (3 itens)
+#####################################################################
+
+[ITEM 34 de 37]
+Nome do Produto   : Água Mineral 510ml
+Categoria         : Bebidas
+Preço             : R$ 3,90
+Porção            : Serve 1 pessoa
+Descrição         : Garrafa de 510 ml
+Arquivo de Imagem : imagens/34_agua_mineral_510ml.jpg (23.5 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202503051259_513Q_i.jpg
+-------------------------------------------------------------------------------------
+[ITEM 35 de 37]
+Nome do Produto   : Coca Cola Lata
+Categoria         : Bebidas
+Preço             : R$ 7,90
+Porção            : Serve 1 pessoa
+Descrição         : Coca cola lata 350ml
+Arquivo de Imagem : imagens/35_coca_cola_lata.jpeg (31.5 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202103231216_RkHe_.jpeg
+-------------------------------------------------------------------------------------
+[ITEM 36 de 37]
+Nome do Produto   : Água com Gás Oásis 510ml
+Categoria         : Bebidas
+Preço             : R$ 4,90
+Porção            : Porção individual padrão / Não especificada
+Descrição         : Garrafa de 510ml
+Arquivo de Imagem : imagens/36_agua_com_gas_oasis_510ml.jpg (21.1 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202503051301_U860_i.jpg
+-------------------------------------------------------------------------------------
+
+#####################################################################
+### CATEGORIA: OFERTAS (18) (1 itens)
+#####################################################################
+
+[ITEM 37 de 37]
+Nome do Produto   : Torta Trufado com Limão
+Categoria         : Ofertas (18)
+Preço             : R$ 27,90
+Porção            : Porção individual padrão / Não especificada
+Descrição         : Base de bolacha, recheio de Trufado e mousse de limão.
+Arquivo de Imagem : imagens/37_torta_trufado_com_limao.jpg (21.2 KB)
+URL Original CDN  : https://static.ifood-static.com.br/image/upload/t_high/pratos/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202606241644_1D2N_i.jpg
+-------------------------------------------------------------------------------------
+
+=====================================================================================
+                         ATIVOS DA LOJA
+=====================================================================================
+Logotipo da Loja  : imagens/00_logo_loja.jpg
+URL do Logotipo   : https://static.ifood-static.com.br/image/upload/t_high/logosgde/f7b56366-f7d9-4b8a-b0bd-f06ad6c5829f/202102080209_u84Q_i.jpg
+=====================================================================================
+
+Coleta concluída com 100% de integridade dos dados e imagens.
+=====================================================================================

@@ -1,1076 +1,1125 @@
 <?php
-// /**
-//  * ============================================================================
-//  * CONTROLADOR FRONTAL & ROTEADOR (FRONT CONTROLLER) — ELDA BOLOS E DOCES
-//  * ============================================================================
-//  * Ponto de entrada único (Single Entry Point) de todas as requisições HTTP.
-//  * Responsável pelo roteamento de URLs amigáveis, segurança, geração dinâmica
-//  * de arquivos para motores de busca (robots.txt e sitemap.xml) e despacho
-//  * das páginas da loja.
-//  *
-//  * TÉCNICAS DE SEO APLICADAS NESTE ARQUIVO:
-//  * ----------------------------------------------------------------------------
-//  * 1. SEO TÉCNICO & PROTOCOLO SITEMAP (SITEMAP.XML DINÂMICO):
-//  *    - Rota '/sitemap.xml' gera dinamicamente um arquivo XML no padrão sitemaps.org.
-//  *    - Lista automaticamente a página inicial (/), o cardápio (/cardapio) e
-//  *      todos os produtos ativos no banco (/produto/{slug}).
-//  *    - Garante 100% de cobertura de indexação para novos produtos sem intervenção manual.
-//  *
-//  * 2. DIRETIVAS PARA MOTORES DE BUSCA (ROBOTS.TXT DINÂMICO):
-//  *    - Rota '/robots.txt' define permissões de rastreamento para robôs de busca.
-//  *    - Permite indexação de todas as rotas públicas (vitrine, catálogo, produtos).
-//  *    - Bloqueia áreas administrativas (/admin), carrinho (/carrinho), checkout
-//  *      e dados privados (/minha-conta), preservando o Crawl Budget do Googlebot.
-//  *    - Aponta o endereço canônico absoluto para o sitemap.xml.
-//  *
-//  * 3. URLS AMIGÁVEIS E CANÔNICAS (CLEAN URLS / SLUGS):
-//  *    - Roteamento semântico baseado em slugs (/produto/tartelette-lumiere).
-//  *    - URLs limpas e fáceis de ler são um fator oficial de ranqueamento no Google,
-//  *      superando amplamente URLs com parâmetros obscuros (?p=85188).
-//  *
-//  * 4. SUPORTE A REQUISIÇÕES HTTP GET & HEAD:
-//  *    - Motores de busca frequentemente enviam requisições HEAD para verificar
-//  *      cabeçalhos e status HTTP sem baixar o corpo da resposta. O roteador aceita
-//  *      tanto GET quanto HEAD para todas as rotas públicas.
-//  *
-//  * 5. TRATAMENTO DE STATUS HTTP E ELIMINAÇÃO DE SOFT 404:
-//  *    - Páginas inexistentes retornam estritamente o código HTTP 404 Not Found.
-//  *    - Rotas de excesso de requisições emitem HTTP 429 Too Many Requests com Retry-After.
-//  *    - Redirecionamentos utilizam HTTP 303 See Other para prevenir reenvio de formulários.
-//  * ============================================================================
-//  */
-//
-// declare(strict_types=1);
-//
-// // Inicializa o ambiente, configurações, banco de dados e funções auxiliares
-// require dirname(__DIR__) . '/src/bootstrap.php';
-//
-// // Normaliza o caminho solicitado e o verbo HTTP
-// $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
-// $path = $path !== '/' ? rtrim($path, '/') : '/';
-// $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
-// $isGet = in_array($method, ['GET', 'HEAD'], true);
-//
-// // ============================================================================
-// // CANONICAL REDIRECT (RESOLVE URL CANONICALIZATION & DUPLICATE CONTENT)
-// // ============================================================================
-// $requestHost = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
-// $isHttpsProto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
-// $requestUri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
-//
-// // Se acessado por domínio externo, consolida com 301 no domínio canônico oficial:
-// if ($requestHost !== '' && !in_array($requestHost, ['localhost', '127.0.0.1'], true) && !str_starts_with($requestHost, '127.0.0.1:') && !str_starts_with($requestHost, 'localhost:')) {
-//     if (!$isHttpsProto || str_starts_with($requestHost, 'www.')) {
-//         header('Location: https://elda-doces.com' . $requestUri, true, 301);
-//         exit;
-//     }
-// }
-//
-// // ============================================================================
-// // ASSETS CRÍTICOS: FAVICON & PWA MANIFEST
-// // ============================================================================
-// if ($isGet && ($path === '/favicon.ico' || $path === '/apple-touch-icon.png')) {
-//     header('Content-Type: image/svg+xml; charset=utf-8');
-//     header('Cache-Control: public, max-age=31536000, immutable');
-//     readfile(__DIR__ . '/assets/images/favicon.svg');
-//     exit;
-// }
-//
-// if ($isGet && $path === '/site.webmanifest') {
-//     header('Content-Type: application/manifest+json; charset=utf-8');
-//     header('Cache-Control: public, max-age=86400');
-//     readfile(__DIR__ . '/site.webmanifest');
-//     exit;
-// }
-//
-// // ============================================================================
-// // 1. LIMITES DE TAMANHO DE PAYLOAD (PROTEÇÃO CONTRA DOS)
-// // ============================================================================
-// if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 2_000_000) {
-//     render('errors/status', [
-//         'code' => 413, 
-//         'title' => 'Envio grande demais', 
-//         'message' => 'O conteúdo enviado ultrapassa o limite permitido pelo servidor.'
-//     ], 413);
-//     exit;
-// }
-//
-// // ============================================================================
-// // 2. ENDPOINT DE SAÚDE / OBSERVABILIDADE (HEALTH CHECK)
-// // ============================================================================
-// if ($isGet && $path === '/health') {
-//     header('Content-Type: application/json; charset=utf-8');
-//     echo json_encode([
-//         'status' => 'ok', 
-//         'service' => 'elda-bolos-e-doces', 
-//         'node' => getenv('APP_NODE') ?: 'php-' . ($_SERVER['SERVER_PORT'] ?? 'unknown'), 
-//         'time' => date(DATE_ATOM)
-//     ]);
-//     exit;
-// }
-//
-// // Suporte direto para /favicon.ico
-// if ($isGet && $path === '/favicon.ico') {
-//     header('Content-Type: image/svg+xml');
-//     header('Cache-Control: public, max-age=86400');
-//     readfile(__DIR__ . '/assets/images/favicon.svg');
-//     exit;
-// }
-//
-// // ============================================================================
-// // 3. RATE LIMITING EM ROTAS CRÍTICAS (AUTENTICAÇÃO & FORÇA BRUTA)
-// // ============================================================================
-// $rateLimitedEndpoints = ['/entrar', '/criar-conta', '/verificar-codigo', '/verificar-codigo/reenviar'];
-// if (in_array($path, $rateLimitedEndpoints, true)) {
-//     try {
-//         // Limite elevado de 2.000 requisições por janela para proteger contra abuso
-//         // sem prejudicar usuários sob CGNAT de operadoras móveis ou provedores locais.
-//         $retryAfter = $rateLimiter->hit(client_ip(), 2000, 1, 300);
-//     } catch (Throwable $exception) {
-//         error_log('Rate limiter indisponível: ' . $exception->getMessage());
-//         render('errors/status', [
-//             'code' => 503, 
-//             'title' => 'Proteção temporariamente indisponível', 
-//             'message' => 'Não foi possível validar esta tentativa com segurança. Tente novamente em instantes.'
-//         ], 503);
-//         exit;
-//     }
-//
-//     header('RateLimit-Limit: 2000');
-//     if ($retryAfter > 0) {
-//         header('Retry-After: ' . $retryAfter);
-//         header('RateLimit-Reset: ' . $retryAfter);
-//         render('errors/status', [
-//             'code' => 429, 
-//             'title' => 'Muitas tentativas', 
-//             'message' => 'Este endereço IP foi temporariamente bloqueado por 5 minutos por excesso de requisições.'
-//         ], 429);
-//         exit;
-//     }
-// }
-//
-// // ============================================================================
-// // 4. SEO TÉCNICO: ROBOTS.TXT DINÂMICO
-// // ============================================================================
-// if ($isGet && $path === '/robots.txt') {
-//     header('Content-Type: text/plain; charset=utf-8');
-//     // Instrui os motores de busca sobre quais diretórios rastrear e onde encontrar o sitemap
-//     echo "User-agent: *\n";
-//     echo "Allow: /\n";
-//     echo "Disallow: /admin\n";
-//     echo "Disallow: /minha-conta\n";
-//     echo "Disallow: /checkout\n";
-//     echo "Disallow: /pedido/\n";
-//     echo "Disallow: /webhooks/\n";
-//     echo "Sitemap: " . request_base_url() . "/sitemap.xml\n";
-//     exit;
-// }
-//
-// // ============================================================================
-// // 5. SEO TÉCNICO: SITEMAP.XML DINÂMICO COM PROTOCOLO SITEMAPS 0.9
-// // ============================================================================
-// if ($isGet && $path === '/sitemap.xml') {
-//     // Páginas fundamentais da loja
-//     $locations = [
-//         request_base_url() . '/',
-//         request_base_url() . '/cardapio'
-//     ];
-//
-//     // Adiciona dinamicamente todas as URLs de produtos ativos com seus slugs semânticos
-//     foreach ($store->products() as $sitemapProduct) {
-//         if (!empty($sitemapProduct['slug'])) {
-//             $locations[] = request_base_url() . '/produto/' . rawurlencode((string) $sitemapProduct['slug']);
-//         }
-//     }
-//
-//     header('Content-Type: application/xml; charset=utf-8');
-//     echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-//     echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
-//     foreach ($locations as $location) {
-//         echo "  <url>\n";
-//         echo "    <loc>" . e($location) . "</loc>\n";
-//         echo "    <changefreq>weekly</changefreq>\n";
-//         echo "    <priority>" . ($location === request_base_url() . '/' ? '1.0' : '0.8') . "</priority>\n";
-//         echo "  </url>\n";
-//     }
-//     echo '</urlset>';
-//     exit;
-// }
-//
-// // ============================================================================
-// // 6. API DE IMAGENS EM BASE64 COM CACHE SEGURO
-// // ============================================================================
-// if ($isGet && preg_match('#^/api/imagens/([a-zA-Z0-9._-]+\.(?:jpg|jpeg|png|webp))$#i', $path, $matches)) {
-//     $filename = basename($matches[1]);
-//     $realImagesDir = realpath(__DIR__ . '/assets/images');
-//     $imagePath = realpath(__DIR__ . '/assets/images/' . $filename);
-//
-//     if ($imagePath === false || $realImagesDir === false || !str_starts_with($imagePath, $realImagesDir . DIRECTORY_SEPARATOR) || !is_file($imagePath)) {
-//         header('Content-Type: application/json; charset=utf-8');
-//         http_response_code(404);
-//         echo json_encode(['error' => 'Imagem não encontrada.'], JSON_UNESCAPED_UNICODE);
-//         exit;
-//     }
-//
-//     $contents = file_get_contents($imagePath);
-//     if ($contents === false) {
-//         http_response_code(404);
-//         exit;
-//     }
-//
-//     $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-//     $mime = match ($ext) {
-//         'png' => 'image/png',
-//         'webp' => 'image/webp',
-//         default => 'image/jpeg',
-//     };
-//
-//     header('Content-Type: application/json; charset=utf-8');
-//     header('Cache-Control: no-store, private, max-age=0');
-//     echo json_encode(['data' => 'data:' . $mime . ';base64,' . base64_encode($contents)], JSON_UNESCAPED_SLASHES);
-//     exit;
-// }
-//
-// // ============================================================================
-// // 7. WEBHOOK DO MERCADO PAGO COM ASSINATURA CRIPTOGRÁFICA
-// // ============================================================================
-// if ($method === 'POST' && $path === '/webhooks/mercado-pago') {
-//     header('Content-Type: application/json; charset=utf-8');
-//     $payload = json_decode(file_get_contents('php://input') ?: '{}', true);
-//     $dataId = (string) ($_GET['data_id'] ?? $_GET['data.id'] ?? $_GET['id'] ?? ($payload['data']['id'] ?? ''));
-//
-//     if (!preg_match('/^\d{1,30}$/', $dataId)) {
-//         http_response_code(400);
-//         echo json_encode(['error' => 'invalid_data_id']);
-//         exit;
-//     }
-//
-//     try {
-//         $payment = $mercadoPago->payment($dataId);
-//         $orderId = (string) ($payment['external_reference'] ?? '');
-//         $order = is_uuid($orderId) ? $store->orderById($orderId) : $store->orderByPaymentId((string) ($payment['id'] ?? ''));
-//         $paidCents = (int) round(((float) ($payment['transaction_amount'] ?? 0)) * 100);
-//
-//         if (!$order || !hash_equals((string) $order['id'], $orderId) || $paidCents !== (int) $order['total_cents']) {
-//             throw new RuntimeException('Pagamento não corresponde ao pedido informado.');
-//         }
-//
-//         $store->updateOrderPayment(
-//             $order['id'], 
-//             $mercadoPago->normalizeStatus((string) ($payment['status'] ?? 'pending')), 
-//             (string) $payment['id']
-//         );
-//         echo json_encode(['ok' => true]);
-//     } catch (Throwable $exception) {
-//         error_log('Webhook Mercado Pago rejeitado: ' . $exception->getMessage());
-//         http_response_code(422);
-//         echo json_encode(['error' => 'payment_not_processed']);
-//     }
-//     exit;
-// }
-//
-// // ============================================================================
-// // 8. ROTA: PÁGINA INICIAL (HOME / VITRINE)
-// // ============================================================================
-// if ($isGet && $path === '/') {
-//     // Filtra até 4 doces em destaque para a vitrine principal
-//     $products = array_values(array_filter($store->products(), fn (array $p): bool => (bool) $p['featured']));
-//     render('home', [
-//         'products' => array_slice($products, 0, 4), 
-//         'title' => 'Doces artesanais feitos para encantar em Sorocaba',
-//         'description' => 'Bolos caseiros, tortas finas e brigadeiros artesanais em Sorocaba. Faça sua encomenda na Elda Bolos e Doces ou peça via delivery.'
-//     ]);
-//     exit;
-// }
-//
-// // ============================================================================
-// // 9. ROTA: CARDÁPIO COMPLETO (CATÁLOGO COM BUSCA E CATEGORIAS)
-// // ============================================================================
-// if ($isGet && $path === '/cardapio') {
-//     $products = $store->products();
-//     $category = trim(substr(is_string($_GET['categoria'] ?? null) ? $_GET['categoria'] : '', 0, 60));
-//     $search = trim(substr(is_string($_GET['busca'] ?? null) ? $_GET['busca'] : '', 0, 100));
-//
-//     if ($category !== '') {
-//         $products = array_values(array_filter($products, fn (array $p): bool => $p['category'] === $category));
-//     }
-//     if ($search !== '') {
-//         $products = array_values(array_filter($products, fn (array $p): bool => stripos($p['name'] . ' ' . $p['description'], $search) !== false));
-//     }
-//
-//     $categories = array_values(array_unique(array_column($store->products(), 'category')));
-//
-//     $seoTitle = $category !== '' ? "Cardápio de {$category} — Elda Bolos e Doces" : 'Nosso Cardápio Artesanal';
-//     render('catalog', compact('products', 'categories', 'category', 'search') + [
-//         'title' => $seoTitle,
-//         'description' => 'Conheça todos os nossos bolos, tortas, macarons e brigadeiros artesanais. Produção diária com ingredientes nobres em Sorocaba.'
-//     ]);
-//     exit;
-// }
-//
-// // ============================================================================
-// // 10. ROTA: DETALHE DO PRODUTO (SEO ON-PAGE COM SLUG AMIGÁVEL)
-// // ============================================================================
-// if ($isGet && preg_match('#^/produto/([a-z0-9-]+)$#', $path, $matches)) {
-//     $product = $store->productBySlug($matches[1]);
-//     if (!$product || !(bool) $product['active']) {
-//         render('errors/status', [
-//             'code' => 404, 
-//             'title' => 'Doce não encontrado', 
-//             'message' => 'Este doce artesanal saiu temporariamente da vitrine ou nunca esteve por aqui.'
-//         ], 404);
-//     } else {
-//         $related = array_values(array_filter(
-//             $store->products(), 
-//             fn (array $p): bool => $p['id'] !== $product['id'] && $p['category'] === $product['category']
-//         ));
-//         render('product', compact('product', 'related') + [
-//             'title' => $product['name'] . ' — ' . $product['category'],
-//             'description' => substr((string) $product['description'], 0, 155)
-//         ]);
-//     }
-//     exit;
-// }
-//
-// // ============================================================================
-// // 11. ROTAS: SACOLA DE COMPRAS (CARRINHO)
-// // ============================================================================
-// if ($method === 'POST' && $path === '/carrinho/adicionar') {
-//     verify_csrf('/carrinho');
-//     $id = (string) ($_POST['product_id'] ?? '');
-//     $quantity = max(1, min(20, (int) ($_POST['quantity'] ?? 1)));
-//     $product = is_uuid($id) ? $store->productById($id) : null;
-//
-//     if (!$product || !(bool) $product['active'] || (int) $product['stock'] < 1) {
-//         flash('error', 'Este doce não está disponível no momento.');
-//     } else {
-//         $_SESSION['cart'][$id] = min((int) $product['stock'], (int) ($_SESSION['cart'][$id] ?? 0) + $quantity);
-//         flash('success', $product['name'] . ' foi adicionado à sua sacola com sucesso.');
-//     }
-//     redirect(safe_redirect_target((string) ($_POST['redirect_to'] ?? '/carrinho'), '/carrinho'));
-// }
-//
-// if ($isGet && $path === '/carrinho') {
-//     render('cart', ['cart' => cart_details(), 'title' => 'Sua Sacola de Doces']);
-//     exit;
-// }
-//
-// if ($method === 'POST' && $path === '/carrinho/atualizar') {
-//     verify_csrf('/carrinho');
-//     foreach ((array) ($_POST['quantity'] ?? []) as $id => $quantity) {
-//         $id = (string) $id;
-//         $product = is_uuid($id) ? $store->productById($id) : null;
-//         $quantity = max(0, min((int) ($product['stock'] ?? 0), (int) $quantity));
-//         if ($quantity === 0) {
-//             unset($_SESSION['cart'][$id]);
-//         } else {
-//             $_SESSION['cart'][$id] = $quantity;
-//         }
-//     }
-//     flash('success', 'Sua sacola foi atualizada com sucesso.');
-//     redirect('/carrinho');
-// }
-//
-// if ($method === 'POST' && $path === '/carrinho/remover') {
-//     verify_csrf('/carrinho');
-//     $productId = (string) ($_POST['product_id'] ?? '');
-//     if (is_uuid($productId)) {
-//         unset($_SESSION['cart'][$productId]);
-//     }
-//     flash('info', 'Item removido da sua sacola.');
-//     redirect('/carrinho');
-// }
-//
-// // ============================================================================
-// // 12. ROTAS: LOGIN & AUTENTICAÇÃO COM 2FA
-// // ============================================================================
-// if ($isGet && $path === '/entrar') {
-//     header('Cache-Control: no-store, private');
-//     if (current_user()) redirect('/minha-conta');
-//     render('auth/login', ['title' => 'Entrar na sua conta']);
-//     exit;
-// }
-//
-// if ($method === 'POST' && $path === '/entrar') {
-//     verify_csrf('/entrar');
-//     if (login_is_limited()) {
-//         render('errors/status', [
-//             'code' => 429, 
-//             'title' => 'Muitas tentativas de acesso', 
-//             'message' => 'Espere alguns minutos antes de tentar entrar novamente.'
-//         ], 429);
-//         exit;
-//     }
-//
-//     $email = strtolower(post_string('email'));
-//     $user = filter_var($email, FILTER_VALIDATE_EMAIL) ? $store->userByEmail($email) : null;
-//
-//     if (!$user || !password_verify((string) ($_POST['password'] ?? ''), $user['password_hash'])) {
-//         register_failed_login();
-//         flash('error', 'E-mail ou senha incorretos.');
-//         redirect('/entrar');
-//     }
-//
-//     $target = (string) ($_SESSION['intended'] ?? ($user['role'] === 'admin' ? '/admin' : '/minha-conta'));
-//     session_regenerate_id(true);
-//
-//     try {
-//         begin_two_factor($user, $target);
-//     } catch (Throwable $exception) {
-//         error_log('Falha ao enviar código 2FA: ' . $exception->getMessage());
-//         flash('error', 'Não conseguimos enviar o código agora. Tente novamente em instantes.');
-//         redirect('/entrar');
-//     }
-//
-//     unset($_SESSION['login_attempts']);
-//     redirect('/verificar-codigo');
-// }
-//
-// // ============================================================================
-// // 13. ROTAS: VERIFICAÇÃO EM DUAS ETAPAS (2FA)
-// // ============================================================================
-// if ($isGet && $path === '/verificar-codigo') {
-//     header('Cache-Control: no-store, private');
-//     $pending = $_SESSION['two_factor'] ?? null;
-//     if (!is_array($pending)) {
-//         flash('info', 'Entre com seu e-mail e senha para receber um novo código.');
-//         redirect('/entrar');
-//     }
-//     if (time() > (int) $pending['expires_at']) {
-//         $restart = ($pending['purpose'] ?? 'login') === 'registration' ? '/criar-conta' : '/entrar';
-//         unset($_SESSION['two_factor']);
-//         flash('error', 'O código de verificação expirou. Comece novamente para receber outro.');
-//         redirect($restart);
-//     }
-//
-//     $pendingUser = pending_two_factor_identity($pending);
-//     if (!$pendingUser) {
-//         unset($_SESSION['two_factor']);
-//         redirect('/entrar');
-//     }
-//
-//     render('auth/two-factor', [
-//         'maskedEmail' => masked_email((string) $pendingUser['email']),
-//         'expiresAt' => (int) $pending['expires_at'],
-//         'title' => 'Verificar código de segurança',
-//     ]);
-//     exit;
-// }
-//
-// if ($method === 'POST' && $path === '/verificar-codigo') {
-//     verify_csrf('/verificar-codigo');
-//     $pending = $_SESSION['two_factor'] ?? null;
-//
-//     if (!is_array($pending)) {
-//         flash('error', 'Sua verificação expirou. Entre novamente.');
-//         redirect('/entrar');
-//     }
-//     if (time() > (int) $pending['expires_at']) {
-//         $restart = ($pending['purpose'] ?? 'login') === 'registration' ? '/criar-conta' : '/entrar';
-//         unset($_SESSION['two_factor']);
-//         flash('error', 'O código expirou. Comece novamente para receber outro.');
-//         redirect($restart);
-//     }
-//
-//     $code = preg_replace('/\D/', '', post_string('code', 12)) ?? '';
-//     if (strlen($code) !== 6 || !verify_two_factor_code($code)) {
-//         $_SESSION['two_factor']['attempts'] = (int) $pending['attempts'] + 1;
-//         $remaining = 5 - (int) $_SESSION['two_factor']['attempts'];
-//         if ($remaining <= 0) {
-//             unset($_SESSION['two_factor']);
-//             if (($pending['purpose'] ?? 'login') === 'login') register_failed_login();
-//             flash('error', 'Limite de tentativas atingido. Por favor, comece novamente.');
-//             redirect(($pending['purpose'] ?? 'login') === 'registration' ? '/criar-conta' : '/entrar');
-//         }
-//         flash('error', 'Código incorreto. Você ainda tem ' . $remaining . ' tentativa' . ($remaining === 1 ? '' : 's') . '.');
-//         redirect('/verificar-codigo');
-//     }
-//
-//     // Se a validação foi para cadastro, cria o usuário no banco agora
-//     if (($pending['purpose'] ?? 'login') === 'registration') {
-//         $registration = pending_two_factor_identity($pending);
-//         if (!$registration) {
-//             unset($_SESSION['two_factor']);
-//             redirect('/criar-conta');
-//         }
-//         if ($store->userByEmail((string) $registration['email'])) {
-//             unset($_SESSION['two_factor']);
-//             flash('error', 'Este e-mail foi cadastrado enquanto você confirmava. Entre na conta existente.');
-//             redirect('/entrar');
-//         }
-//         $userId = $store->createUser(
-//             (string) $registration['name'],
-//             (string) $registration['email'],
-//             (string) $registration['password_hash'],
-//             'customer'
-//         );
-//         $user = $store->userById($userId);
-//     } else {
-//         $userId = (string) ($pending['user_id'] ?? '');
-//         $user = is_uuid($userId) ? $store->userById($userId) : null;
-//     }
-//
-//     if (!$user) {
-//         unset($_SESSION['two_factor']);
-//         redirect('/entrar');
-//     }
-//
-//     $target = safe_redirect_target((string) $pending['target'], $user['role'] === 'admin' ? '/admin' : '/minha-conta');
-//     session_regenerate_id(true);
-//     $_SESSION['user_id'] = (string) $user['id'];
-//     $_SESSION['csrf'] = bin2hex(random_bytes(32));
-//     unset($_SESSION['two_factor'], $_SESSION['intended'], $_SESSION['login_attempts']);
-//
-//     flash('success', 'Identidade confirmada com sucesso. Bem-vindo(a), ' . explode(' ', $user['name'])[0] . '!');
-//     redirect($target);
-// }
-//
-// if ($method === 'POST' && $path === '/verificar-codigo/reenviar') {
-//     verify_csrf('/verificar-codigo');
-//     $pending = $_SESSION['two_factor'] ?? null;
-//     if (!is_array($pending)) redirect('/entrar');
-//
-//     if (time() - (int) $pending['sent_at'] < 60) {
-//         flash('info', 'Aguarde um minuto antes de solicitar outro código.');
-//         redirect('/verificar-codigo');
-//     }
-//     if ((int) $pending['resend_count'] >= 4) {
-//         $restart = ($pending['purpose'] ?? 'login') === 'registration' ? '/criar-conta' : '/entrar';
-//         unset($_SESSION['two_factor']);
-//         flash('error', 'Limite de reenvios atingido. Comece novamente.');
-//         redirect($restart);
-//     }
-//
-//     $user = pending_two_factor_identity($pending);
-//     if (!$user) {
-//         $restart = ($pending['purpose'] ?? 'login') === 'registration' ? '/criar-conta' : '/entrar';
-//         unset($_SESSION['two_factor']);
-//         redirect($restart);
-//     }
-//
-//     try {
-//         begin_two_factor($user, (string) $pending['target'], (int) $pending['resend_count'] + 1, (string) ($pending['purpose'] ?? 'login'));
-//         flash('success', 'Enviamos um novo código para seu e-mail.');
-//     } catch (Throwable $exception) {
-//         error_log('Falha ao reenviar 2FA: ' . $exception->getMessage());
-//         flash('error', 'Não foi possível reenviar o código agora.');
-//     }
-//     redirect('/verificar-codigo');
-// }
-//
-// // ============================================================================
-// // 13.1 ROTAS: RECUPERAÇÃO E REDEFINIÇÃO DE SENHA
-// // ============================================================================
-// if ($isGet && $path === '/esqueci-senha') {
-//     header('Cache-Control: no-store, private');
-//     if (current_user()) redirect('/minha-conta');
-//     $email = (string) ($_GET['email'] ?? ($_SESSION['reset_email'] ?? ''));
-//     render('auth/forgot-password', [
-//         'title' => 'Recuperar senha',
-//         'email' => $email,
-//     ]);
-//     exit;
-// }
-//
-// if ($method === 'POST' && $path === '/esqueci-senha') {
-//     verify_csrf('/esqueci-senha');
-//     if (login_is_limited()) {
-//         render('errors/status', [
-//             'code' => 429,
-//             'title' => 'Muitas solicitações',
-//             'message' => 'Aguarde alguns minutos antes de solicitar um novo código.'
-//         ], 429);
-//         exit;
-//     }
-//
-//     $email = strtolower(post_string('email'));
-//     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-//         flash('error', 'Informe um endereço de e-mail válido.');
-//         redirect('/esqueci-senha');
-//     }
-//
-//     $user = $store->userByEmail($email);
-//     if (!$user) {
-//         flash('error', 'Não encontramos nenhuma conta com o e-mail informado.');
-//         redirect('/esqueci-senha?email=' . urlencode($email));
-//     }
-//
-//     $code = generate_keyboard_reset_code(12);
-//     try {
-//         store_password_reset_code($email, (string) $user['id'], $code, 15);
-//         $mailer->sendPasswordResetCode($user, $code, 15);
-//         $_SESSION['reset_email'] = $email;
-//         flash('success', 'Enviamos o código aleatório com caracteres do teclado para o seu e-mail. Verifique sua caixa de entrada.');
-//         redirect('/redefinir-senha?email=' . urlencode($email));
-//     } catch (Throwable $exception) {
-//         error_log('Falha ao enviar código de recuperação: ' . $exception->getMessage());
-//         flash('error', 'Não conseguimos enviar o e-mail agora. Verifique a conexão e tente novamente.');
-//         redirect('/esqueci-senha?email=' . urlencode($email));
-//     }
-// }
-//
-// if ($isGet && $path === '/redefinir-senha') {
-//     header('Cache-Control: no-store, private');
-//     if (current_user()) redirect('/minha-conta');
-//     $email = (string) ($_GET['email'] ?? ($_SESSION['reset_email'] ?? ''));
-//     render('auth/reset-password', [
-//         'title' => 'Redefinir senha',
-//         'email' => $email,
-//     ]);
-//     exit;
-// }
-//
-// if ($method === 'POST' && $path === '/redefinir-senha') {
-//     verify_csrf('/redefinir-senha');
-//     $email = strtolower(post_string('email'));
-//     $code = trim(post_string('code', 64));
-//     $password = (string) ($_POST['password'] ?? '');
-//     $passwordConfirmation = (string) ($_POST['password_confirmation'] ?? '');
-//
-//     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-//         flash('error', 'Informe um e-mail válido.');
-//         redirect('/redefinir-senha');
-//     }
-//
-//     if ($code === '') {
-//         flash('error', 'Informe o código recebido no seu e-mail.');
-//         redirect('/redefinir-senha?email=' . urlencode($email));
-//     }
-//
-//     if (strlen($password) < 8) {
-//         flash('error', 'A nova senha deve ter no mínimo 8 caracteres.');
-//         redirect('/redefinir-senha?email=' . urlencode($email));
-//     }
-//
-//     if ($password !== $passwordConfirmation) {
-//         flash('error', 'A confirmação de senha não confere com a nova senha digitada.');
-//         redirect('/redefinir-senha?email=' . urlencode($email));
-//     }
-//
-//     $result = verify_password_reset_code($email, $code);
-//     if (!$result['success']) {
-//         if ($result['error'] === 'invalid') {
-//             $remaining = (int) ($result['remaining'] ?? 0);
-//             if ($remaining > 0) {
-//                 flash('error', 'Código incorreto. Você ainda tem ' . $remaining . ' tentativa' . ($remaining === 1 ? '' : 's') . '.');
-//             } else {
-//                 flash('error', 'Limite de tentativas excedido para este código. Solicite um novo código de recuperação.');
-//                 redirect('/esqueci-senha?email=' . urlencode($email));
-//             }
-//         } else {
-//             flash('error', 'O código de verificação expirou ou é inválido. Solicite um novo código.');
-//             redirect('/esqueci-senha?email=' . urlencode($email));
-//         }
-//         redirect('/redefinir-senha?email=' . urlencode($email));
-//     }
-//
-//     $user = $store->userByEmail($email);
-//     if (!$user) {
-//         flash('error', 'Conta não localizada.');
-//         redirect('/entrar');
-//     }
-//
-//     $newHash = bcrypt_hash($password);
-//     $store->updateUserPassword((string) $user['id'], $newHash);
-//     unset($_SESSION['reset_email']);
-//
-//     session_regenerate_id(true);
-//     flash('success', 'Sua senha foi redefinida com sucesso! Você já pode entrar com a nova senha.');
-//     redirect('/entrar');
-// }
-//
-// // ============================================================================
-// // 14. ROTAS: CADASTRO DE CLIENTE
-// // ============================================================================
-// if ($isGet && $path === '/criar-conta') {
-//     render('auth/register', ['title' => 'Criar sua conta']);
-//     exit;
-// }
-//
-// if ($method === 'POST' && $path === '/criar-conta') {
-//     verify_csrf('/criar-conta');
-//     $name = post_string('name', 100);
-//     $email = strtolower(post_string('email'));
-//     $password = (string) ($_POST['password'] ?? '');
-//     $errors = [];
-//
-//     if (strlen($name) < 3) $errors[] = 'Informe seu nome completo.';
-//     if (strlen($email) > 190 || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Informe um e-mail válido.';
-//     elseif ($store->userByEmail($email)) $errors[] = 'Já existe uma conta registrada com este e-mail.';
-//     if (strlen($password) < 8 || !preg_match('/[A-Z]/', $password) || !preg_match('/[0-9]/', $password)) {
-//         $errors[] = 'A senha precisa de pelo menos 8 caracteres, uma letra maiúscula e um número.';
-//     }
-//     if (strlen($password) > 72) $errors[] = 'A senha pode ter no máximo 72 caracteres.';
-//
-//     if ($errors !== []) {
-//         foreach ($errors as $error) flash('error', $error);
-//         redirect('/criar-conta');
-//     }
-//
-//     $pendingRegistration = [
-//         'name' => $name,
-//         'email' => $email,
-//         'password_hash' => bcrypt_hash($password),
-//         'role' => 'customer',
-//     ];
-//     session_regenerate_id(true);
-//
-//     try {
-//         begin_two_factor($pendingRegistration, '/minha-conta', 0, 'registration');
-//         flash('success', 'Enviamos um código de 6 dígitos. Sua conta será ativada após a confirmação.');
-//         redirect('/verificar-codigo');
-//     } catch (Throwable $exception) {
-//         error_log('Falha ao enviar 2FA no cadastro: ' . $exception->getMessage());
-//         unset($_SESSION['two_factor']);
-//         flash('error', 'O código não pôde ser entregue e nenhuma conta foi criada. Tente novamente.');
-//         redirect('/criar-conta');
-//     }
-// }
-//
-// // ============================================================================
-// // 15. ROTA: LOGOUT SEGURO
-// // ============================================================================
-// if ($method === 'POST' && $path === '/sair') {
-//     verify_csrf('/');
-//     unset($_SESSION['user_id'], $_SESSION['two_factor']);
-//     session_regenerate_id(true);
-//     flash('info', 'Você saiu da sua conta com segurança. Até breve!');
-//     redirect('/');
-// }
-//
-// // ============================================================================
-// // 16. ROTAS: CHECKOUT E PAGAMENTO PIX
-// // ============================================================================
-// if ($isGet && $path === '/checkout') {
-//     $user = require_auth();
-//     $cart = cart_details();
-//     if ($cart['items'] === []) {
-//         flash('info', 'Sua sacola está vazia.');
-//         redirect('/cardapio');
-//     }
-//     render('checkout', compact('cart', 'user') + ['title' => 'Finalizar Pedido']);
-//     exit;
-// }
-//
-// if ($method === 'POST' && $path === '/checkout') {
-//     verify_csrf('/checkout');
-//     $user = require_auth();
-//     $cart = cart_details();
-//     if ($cart['items'] === []) redirect('/cardapio');
-//
-//     $customer = [
-//         'name' => post_string('name', 100),
-//         'email' => strtolower((string) $user['email']),
-//         'cpf' => post_string('cpf', 18),
-//         'phone' => post_string('phone', 30),
-//         'zip' => post_string('zip', 12),
-//         'address' => post_string('address', 180),
-//         'number' => post_string('number', 20),
-//         'complement' => post_string('complement', 80),
-//         'city' => post_string('city', 80),
-//         'payment' => 'pix',
-//     ];
-//
-//     if ($customer['name'] === '' || $customer['phone'] === '' || $customer['zip'] === '' || $customer['address'] === '' || $customer['number'] === '' || $customer['city'] === '') {
-//         flash('error', 'Preencha todos os dados obrigatórios para entrega.');
-//         redirect('/checkout');
-//     }
-//     if (!valid_cpf($customer['cpf'])) {
-//         flash('error', 'Informe um número de CPF válido para emitir o PIX.');
-//         redirect('/checkout');
-//     }
-//     if (!$mercadoPago->isConfigured()) {
-//         flash('error', 'O PIX ainda não foi conectado ao Mercado Pago. Configure o Access Token para finalizar.');
-//         redirect('/checkout');
-//     }
-//
-//     $items = array_map(fn (array $line): array => [
-//         'product_id' => (string) $line['product']['id'],
-//         'name' => $line['product']['name'],
-//         'quantity' => $line['quantity'],
-//         'unit_cents' => (int) $line['product']['price_cents']
-//     ], $cart['items']);
-//
-//     $orderCustomer = $customer;
-//     unset($orderCustomer['cpf']); // Não armazena CPF sensível em texto claro no registro de entrega
-//     $order = $store->createOrder((string) $user['id'], $orderCustomer, $items, $cart['total_cents']);
-//
-//     try {
-//         $pix = $mercadoPago->createPix($order, $customer, request_base_url() . '/webhooks/mercado-pago');
-//         $store->updateOrderPayment($order['id'], $pix['status'], $pix['payment_id'], [
-//             'pix_code' => $pix['pix_code'],
-//             'pix_qr_base64' => $pix['pix_qr_base64'],
-//             'payment_expires_at' => $pix['expires_at'],
-//         ]);
-//         unset($_SESSION['cart']);
-//         redirect('/pedido/sucesso/' . rawurlencode((string) $order['number']));
-//     } catch (Throwable $exception) {
-//         $store->updateOrderPayment($order['id'], 'rejected', null);
-//         error_log('Falha ao gerar PIX para ' . $order['number'] . ': ' . $exception->getMessage());
-//         flash('error', 'Não foi possível gerar a cobrança PIX agora. Nenhuma cobrança foi concluída; tente novamente.');
-//         redirect('/checkout');
-//     }
-// }
-//
-// if ($isGet && preg_match('#^/api/pedidos/([A-Za-z0-9]+)/status$#', $path, $matches)) {
-//     header('Content-Type: application/json; charset=utf-8');
-//     $user = require_auth();
-//     $order = null;
-//     foreach ($store->orders((string) $user['id']) as $candidate) {
-//         if ($candidate['number'] === $matches[1]) $order = $candidate;
-//     }
-//     if (!$order) {
-//         http_response_code(404);
-//         echo json_encode(['error' => 'not_found']);
-//         exit;
-//     }
-//
-//     $paymentStatus = (string) ($order['payment_status'] ?? 'pending');
-//     if ($paymentStatus === 'pending' && !empty($order['payment_id'])) {
-//         try {
-//             $payment = $mercadoPago->payment((string) $order['payment_id']);
-//             $currentStatus = $mercadoPago->normalizeStatus((string) ($payment['status'] ?? 'pending'));
-//             if ($currentStatus !== 'pending') {
-//                 $store->updateOrderPayment((string) $order['id'], $currentStatus, (string) $payment['id']);
-//                 $paymentStatus = $currentStatus;
-//             }
-//         } catch (Throwable $e) {}
-//     }
-//
-//     echo json_encode(['status' => $paymentStatus]);
-//     exit;
-// }
-//
-// if ($isGet && preg_match('#^/pedido/sucesso/([A-Za-z0-9]+)$#', $path, $matches)) {
-//     $user = require_auth();
-//     $order = null;
-//     foreach ($store->orders((string) $user['id']) as $candidate) {
-//         if ($candidate['number'] === $matches[1]) $order = $candidate;
-//     }
-//     if (!$order) {
-//         render('errors/status', [
-//             'code' => 404, 
-//             'title' => 'Pedido não localizado', 
-//             'message' => 'Não localizamos este pedido associado à sua conta.'
-//         ], 404);
-//         exit;
-//     }
-//
-//     // Auto-sincronização com o Mercado Pago se o pedido ainda estiver pendente
-//     if (($order['payment_status'] ?? 'pending') === 'pending' && !empty($order['payment_id'])) {
-//         try {
-//             $payment = $mercadoPago->payment((string) $order['payment_id']);
-//             $currentStatus = $mercadoPago->normalizeStatus((string) ($payment['status'] ?? 'pending'));
-//             if ($currentStatus !== 'pending') {
-//                 $store->updateOrderPayment((string) $order['id'], $currentStatus, (string) $payment['id']);
-//                 $order['payment_status'] = $currentStatus;
-//             }
-//         } catch (Throwable $e) {}
-//     }
-//
-//     render('order-success', compact('order') + ['title' => 'Pedido Confirmado']);
-//     exit;
-// }
-//
-// // ============================================================================
-// // 17. ROTA: MINHA CONTA (ÁREA DO CLIENTE)
-// // ============================================================================
-// if ($isGet && $path === '/minha-conta') {
-//     $user = require_auth();
-//     $orders = $store->orders((string) $user['id']);
-//     render('account', compact('user', 'orders') + ['title' => 'Minha Conta']);
-//     exit;
-// }
-//
-// // ============================================================================
-// // 18. ROTAS: PAINEL ADMINISTRATIVO (ADMIN RBAC)
-// // ============================================================================
-// if ($isGet && $path === '/admin') {
-//     require_admin();
-//     render('admin/dashboard', [
-//         'metrics' => $store->dashboard(),
-//         'orders' => array_slice($store->orders(), 0, 8),
-//         'products' => $store->products(true),
-//         'title' => 'Painel Administrativo'
-//     ]);
-//     exit;
-// }
-//
-// if ($isGet && $path === '/admin/pedidos') {
-//     require_admin();
-//     render('admin/orders', [
-//         'orders' => $store->orders(),
-//         'title' => 'Gestão de Pedidos'
-//     ]);
-//     exit;
-// }
-//
-// if ($isGet && ($path === '/admin/produtos/novo' || preg_match('#^/admin/produtos/([0-9a-f-]{36})/editar$#i', $path, $matches))) {
-//     require_admin();
-//     $product = isset($matches[1]) && is_uuid($matches[1]) ? $store->productById($matches[1]) : null;
-//     if (isset($matches[1]) && !$product) {
-//         render('errors/status', [
-//             'code' => 404, 
-//             'title' => 'Produto não encontrado', 
-//             'message' => 'O produto solicitado para edição não existe.'
-//         ], 404);
-//         exit;
-//     }
-//     render('admin/product-form', compact('product') + [
-//         'title' => $product ? 'Editar Produto' : 'Novo Produto'
-//     ]);
-//     exit;
-// }
-//
-// if ($method === 'POST' && ($path === '/admin/produtos/novo' || preg_match('#^/admin/produtos/([0-9a-f-]{36})/editar$#i', $path, $matches))) {
-//     require_admin();
-//     verify_csrf($path);
-//     $id = isset($matches[1]) && is_uuid($matches[1]) ? $matches[1] : '';
-//     $existingProduct = ($id !== '' && is_uuid($id)) ? $store->productById($id) : null;
-//     $name = post_string('name', 120);
-//
-//     // ========================================================================
-//     // PROCESSAMENTO DA IMAGEM: UPLOAD DE ARQUIVO (JPG/PNG) OU SELEÇÃO
-//     // ========================================================================
-//     $image = '';
-//
-//     // 1. Processar envio de arquivo por upload
-//     if (isset($_FILES['image_file']) && is_array($_FILES['image_file']) && $_FILES['image_file']['error'] !== UPLOAD_ERR_NO_FILE) {
-//         $fileError = $_FILES['image_file']['error'];
-//         if ($fileError === UPLOAD_ERR_INI_SIZE || $fileError === UPLOAD_ERR_FORM_SIZE || $_FILES['image_file']['size'] > 4 * 1024 * 1024) {
-//             flash('error', 'A imagem enviada excede o limite máximo permitido de 4MB.');
-//             redirect($path);
-//         }
-//         if ($fileError !== UPLOAD_ERR_OK) {
-//             flash('error', 'Falha no envio da imagem (código de erro: ' . $fileError . '). Tente novamente.');
-//             redirect($path);
-//         }
-//
-//         $tmpFile = $_FILES['image_file']['tmp_name'];
-//         if (!is_uploaded_file($tmpFile)) {
-//             flash('error', 'Arquivo de upload inválido.');
-//             redirect($path);
-//         }
-//
-//         // Validação estrita do tipo MIME real da imagem
-//         $finfo = finfo_open(FILEINFO_MIME_TYPE);
-//         $mime = $finfo ? finfo_file($finfo, $tmpFile) : '';
-//         if ($finfo) {
-//             finfo_close($finfo);
-//         }
-//
-//         if (!in_array($mime, ['image/jpeg', 'image/png'], true)) {
-//             flash('error', 'Formato de imagem inválido. Aceitamos somente fotos JPG ou PNG.');
-//             redirect($path);
-//         }
-//
-//         // Validação da integridade dos dados da imagem
-//         $imageInfo = @getimagesize($tmpFile);
-//         if ($imageInfo === false || !in_array($imageInfo[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG], true)) {
-//             flash('error', 'O arquivo enviado não é uma imagem JPG ou PNG válida.');
-//             redirect($path);
-//         }
-//
-//         $extension = ($imageInfo[2] === IMAGETYPE_PNG) ? 'png' : 'jpg';
-//         $slugBase = slugify($name) ?: 'doce';
-//         $slugBase = substr($slugBase, 0, 30);
-//         $newFilename = 'prod-' . $slugBase . '-' . bin2hex(random_bytes(4)) . '.' . $extension;
-//         $destPath = __DIR__ . '/assets/images/' . $newFilename;
-//
-//         if (!move_uploaded_file($tmpFile, $destPath)) {
-//             flash('error', 'Erro ao salvar a imagem no servidor. Tente novamente.');
-//             redirect($path);
-//         }
-//         @chmod($destPath, 0644);
-//         $image = $newFilename;
-//     }
-//
-//     // 2. Se nenhum arquivo novo foi enviado, usar seleção da galeria ou manter existente
-//     if ($image === '') {
-//         $selectedImage = basename((string) ($_POST['image'] ?? ''));
-//         if ($selectedImage !== '' && preg_match('/^[a-zA-Z0-9._-]+\.(?:jpg|jpeg|png|webp)$/i', $selectedImage) && is_file(__DIR__ . '/assets/images/' . $selectedImage)) {
-//             $image = $selectedImage;
-//         } elseif ($existingProduct && !empty($existingProduct['image']) && is_file(__DIR__ . '/assets/images/' . $existingProduct['image'])) {
-//             $image = $existingProduct['image'];
-//         } else {
-//             $image = 'chocolate.jpg';
-//         }
-//     }
-//
-//     $product = [
-//         'id' => $id,
-//         'name' => $name,
-//         'slug' => slugify(post_string('slug') ?: $name),
-//         'description' => post_string('description', 800),
-//         'price_cents' => (int) round(((float) str_replace(',', '.', (string) ($_POST['price'] ?? 0))) * 100),
-//         'compare_cents' => null,
-//         'category' => post_string('category', 60),
-//         'image' => $image,
-//         'stock' => max(0, (int) ($_POST['stock'] ?? 0)),
-//         'featured' => isset($_POST['featured']) ? 1 : 0,
-//         'active' => isset($_POST['active']) ? 1 : 0,
-//         'portion' => post_string('portion', 80),
-//     ];
-//
-//     if ($product['name'] === '' || $product['description'] === '' || $product['price_cents'] < 100 || $product['category'] === '') {
-//         flash('error', 'Preencha nome, descrição, categoria e um preço válido.');
-//         redirect($path);
-//     }
-//
-//     try {
-//         $store->saveProduct($product);
-//         flash('success', $id !== '' ? 'Produto atualizado na vitrine.' : 'Novo doce cadastrado na vitrine.');
-//     } catch (Throwable $exception) {
-//         error_log('Falha ao salvar produto: ' . $exception->getMessage());
-//         flash('error', 'Não foi possível salvar o produto. Confira se o nome ou slug já estão em uso.');
-//         redirect($path);
-//     }
-//     redirect('/admin');
-// }
-//
-// if ($method === 'POST' && preg_match('#^/admin/pedidos/([0-9a-f-]{36})/status$#i', $path, $matches)) {
-//     require_admin();
-//     verify_csrf('/admin/pedidos');
-//     $status = (string) ($_POST['status'] ?? '');
-//     if (is_uuid($matches[1]) && in_array($status, ['received', 'preparing', 'shipping', 'delivered', 'cancelled'], true)) {
-//         $store->updateOrderStatus($matches[1], $status);
-//         flash('success', 'Status da entrega atualizado com sucesso.');
-//     }
-//     redirect('/admin/pedidos');
-// }
-//
-// // ============================================================================
-// // 19. ROTAS: PÁGINAS DE STATUS E TESTE DE RESPOSTAS HTTP
-// // ============================================================================
-// if ($isGet && $path === '/status') {
-//     render('status-index', ['title' => 'Status do Sistema']);
-//     exit;
-// }
-//
-// if ($isGet && preg_match('#^/status/(400|401|403|404|429|500|503)$#', $path, $matches)) {
-//     $code = (int) $matches[1];
-//     $messages = [
-//         400 => ['Pedido confuso', 'Alguma informação chegou incompleta. Volte e tente novamente.'],
-//         401 => ['Identificação necessária', 'Entre na sua conta para acessar este conteúdo.'],
-//         403 => ['Área reservada', 'Você não tem permissão para abrir esta página.'],
-//         404 => ['Ops, essa doçura sumiu', 'A página que você procura não está mais nesta vitrine.'],
-//         429 => ['Um pouquinho de calma', 'Recebemos muitas tentativas em pouco tempo. Tente novamente em alguns minutos.'],
-//         500 => ['A receita desandou', 'Tivemos um imprevisto interno e já estamos cuidando disso.'],
-//         503 => ['Forno aquecendo', 'Estamos preparando tudo para voltar em instantes.'],
-//     ];
-//     render('errors/status', [
-//         'code' => $code, 
-//         'title' => $messages[$code][0], 
-//         'message' => $messages[$code][1]
-//     ], $code);
-//     exit;
-// }
-//
-// // ============================================================================
-// // 20. FALLBACK: RESPOSTA 404 PADRÃO (PREVINE SOFT 404 PARA O GOOGLE)
-// // ============================================================================
-// render('errors/status', [
-//     'code' => 404, 
-//     'title' => 'Ops, essa doçura sumiu', 
-//     'message' => 'A página ou doce que você procura não foi encontrado em nossa vitrine.'
-// ], 404);
+/**
+ * ============================================================================
+ * CONTROLADOR FRONTAL & ROTEADOR (FRONT CONTROLLER) — ELDA BOLOS E DOCES
+ * ============================================================================
+ * Ponto de entrada único (Single Entry Point) de todas as requisições HTTP.
+ * Responsável pelo roteamento de URLs amigáveis, segurança, geração dinâmica
+ * de arquivos para motores de busca (robots.txt e sitemap.xml) e despacho
+ * das páginas da loja.
+ *
+ * TÉCNICAS DE SEO APLICADAS NESTE ARQUIVO:
+ * ----------------------------------------------------------------------------
+ * 1. SEO TÉCNICO & PROTOCOLO SITEMAP (SITEMAP.XML DINÂMICO):
+ *    - Rota '/sitemap.xml' gera dinamicamente um arquivo XML no padrão sitemaps.org.
+ *    - Lista automaticamente a página inicial (/), o cardápio (/cardapio) e
+ *      todos os produtos ativos no banco (/produto/{slug}).
+ *    - Garante 100% de cobertura de indexação para novos produtos sem intervenção manual.
+ *
+ * 2. DIRETIVAS PARA MOTORES DE BUSCA (ROBOTS.TXT DINÂMICO):
+ *    - Rota '/robots.txt' define permissões de rastreamento para robôs de busca.
+ *    - Permite indexação de todas as rotas públicas (vitrine, catálogo, produtos).
+ *    - Bloqueia áreas administrativas (/admin), carrinho (/carrinho), checkout
+ *      e dados privados (/minha-conta), preservando o Crawl Budget do Googlebot.
+ *    - Aponta o endereço canônico absoluto para o sitemap.xml.
+ *
+ * 3. URLS AMIGÁVEIS E CANÔNICAS (CLEAN URLS / SLUGS):
+ *    - Roteamento semântico baseado em slugs (/produto/tartelette-lumiere).
+ *    - URLs limpas e fáceis de ler são um fator oficial de ranqueamento no Google,
+ *      superando amplamente URLs com parâmetros obscuros (?p=85188).
+ *
+ * 4. SUPORTE A REQUISIÇÕES HTTP GET & HEAD:
+ *    - Motores de busca frequentemente enviam requisições HEAD para verificar
+ *      cabeçalhos e status HTTP sem baixar o corpo da resposta. O roteador aceita
+ *      tanto GET quanto HEAD para todas as rotas públicas.
+ *
+ * 5. TRATAMENTO DE STATUS HTTP E ELIMINAÇÃO DE SOFT 404:
+ *    - Páginas inexistentes retornam estritamente o código HTTP 404 Not Found.
+ *    - Rotas de excesso de requisições emitem HTTP 429 Too Many Requests com Retry-After.
+ *    - Redirecionamentos utilizam HTTP 303 See Other para prevenir reenvio de formulários.
+ * ============================================================================
+ */
+
+declare(strict_types=1);
+
+// Inicializa o ambiente, configurações, banco de dados e funções auxiliares
+require dirname(__DIR__) . '/src/bootstrap.php';
+
+// Normaliza o caminho solicitado e o verbo HTTP
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+$path = $path !== '/' ? rtrim($path, '/') : '/';
+$method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+$isGet = in_array($method, ['GET', 'HEAD'], true);
+
+// ============================================================================
+// CANONICAL REDIRECT (RESOLVE URL CANONICALIZATION & DUPLICATE CONTENT)
+// ============================================================================
+$requestHost = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+$isHttpsProto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+$requestUri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+
+// Se acessado por domínio externo, consolida com 301 no domínio canônico oficial:
+if ($requestHost !== '' && !in_array($requestHost, ['localhost', '127.0.0.1'], true) && !str_starts_with($requestHost, '127.0.0.1:') && !str_starts_with($requestHost, 'localhost:')) {
+    if (!$isHttpsProto || str_starts_with($requestHost, 'www.')) {
+        header('Location: https://elda-doces.com' . $requestUri, true, 301);
+        exit;
+    }
+}
+
+// ============================================================================
+// ASSETS CRÍTICOS: FAVICON & PWA MANIFEST
+// ============================================================================
+if ($isGet && ($path === '/favicon.ico' || $path === '/apple-touch-icon.png')) {
+    header('Content-Type: image/svg+xml; charset=utf-8');
+    header('Cache-Control: public, max-age=31536000, immutable');
+    readfile(__DIR__ . '/assets/images/favicon.svg');
+    exit;
+}
+
+if ($isGet && $path === '/site.webmanifest') {
+    header('Content-Type: application/manifest+json; charset=utf-8');
+    header('Cache-Control: public, max-age=86400');
+    readfile(__DIR__ . '/site.webmanifest');
+    exit;
+}
+
+// ============================================================================
+// 1. LIMITES DE TAMANHO DE PAYLOAD (PROTEÇÃO CONTRA DOS)
+// ============================================================================
+if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 2_000_000) {
+    render('errors/status', [
+        'code' => 413, 
+        'title' => 'Envio grande demais', 
+        'message' => 'O conteúdo enviado ultrapassa o limite permitido pelo servidor.'
+    ], 413);
+    exit;
+}
+
+// ============================================================================
+// 2. ENDPOINT DE SAÚDE / OBSERVABILIDADE (HEALTH CHECK)
+// ============================================================================
+if ($isGet && $path === '/health') {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'status' => 'ok', 
+        'service' => 'elda-bolos-e-doces', 
+        'node' => getenv('APP_NODE') ?: 'php-' . ($_SERVER['SERVER_PORT'] ?? 'unknown'), 
+        'time' => date(DATE_ATOM)
+    ]);
+    exit;
+}
+
+// Suporte direto para /favicon.ico
+if ($isGet && $path === '/favicon.ico') {
+    header('Content-Type: image/svg+xml');
+    header('Cache-Control: public, max-age=86400');
+    readfile(__DIR__ . '/assets/images/favicon.svg');
+    exit;
+}
+
+// ============================================================================
+// 3. RATE LIMITING EM ROTAS CRÍTICAS (AUTENTICAÇÃO & FORÇA BRUTA)
+// ============================================================================
+$rateLimitedEndpoints = ['/entrar', '/criar-conta', '/verificar-codigo', '/verificar-codigo/reenviar'];
+if (in_array($path, $rateLimitedEndpoints, true)) {
+    try {
+        // Limite elevado de 2.000 requisições por janela para proteger contra abuso
+        // sem prejudicar usuários sob CGNAT de operadoras móveis ou provedores locais.
+        $retryAfter = $rateLimiter->hit(client_ip(), 2000, 1, 300);
+    } catch (Throwable $exception) {
+        error_log('Rate limiter indisponível: ' . $exception->getMessage());
+        render('errors/status', [
+            'code' => 503, 
+            'title' => 'Proteção temporariamente indisponível', 
+            'message' => 'Não foi possível validar esta tentativa com segurança. Tente novamente em instantes.'
+        ], 503);
+        exit;
+    }
+
+    header('RateLimit-Limit: 2000');
+    if ($retryAfter > 0) {
+        header('Retry-After: ' . $retryAfter);
+        header('RateLimit-Reset: ' . $retryAfter);
+        render('errors/status', [
+            'code' => 429, 
+            'title' => 'Muitas tentativas', 
+            'message' => 'Este endereço IP foi temporariamente bloqueado por 5 minutos por excesso de requisições.'
+        ], 429);
+        exit;
+    }
+}
+
+// ============================================================================
+// 4. SEO TÉCNICO: ROBOTS.TXT DINÂMICO
+// ============================================================================
+if ($isGet && $path === '/robots.txt') {
+    header('Content-Type: text/plain; charset=utf-8');
+    // Instrui os motores de busca sobre quais diretórios rastrear e onde encontrar o sitemap
+    echo "User-agent: *\n";
+    echo "Allow: /\n";
+    echo "Disallow: /admin\n";
+    echo "Disallow: /minha-conta\n";
+    echo "Disallow: /checkout\n";
+    echo "Disallow: /pedido/\n";
+    echo "Disallow: /webhooks/\n";
+    echo "Sitemap: " . request_base_url() . "/sitemap.xml\n";
+    exit;
+}
+
+// ============================================================================
+// 5. SEO TÉCNICO: SITEMAP.XML DINÂMICO COM PROTOCOLO SITEMAPS 0.9
+// ============================================================================
+if ($isGet && $path === '/sitemap.xml') {
+    // Páginas fundamentais da loja
+    $locations = [
+        request_base_url() . '/',
+        request_base_url() . '/cardapio'
+    ];
+
+    // Adiciona dinamicamente todas as URLs de produtos ativos com seus slugs semânticos
+    foreach ($store->products() as $sitemapProduct) {
+        if (!empty($sitemapProduct['slug'])) {
+            $locations[] = request_base_url() . '/produto/' . rawurlencode((string) $sitemapProduct['slug']);
+        }
+    }
+
+    header('Content-Type: application/xml; charset=utf-8');
+    echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+    foreach ($locations as $location) {
+        echo "  <url>\n";
+        echo "    <loc>" . e($location) . "</loc>\n";
+        echo "    <changefreq>weekly</changefreq>\n";
+        echo "    <priority>" . ($location === request_base_url() . '/' ? '1.0' : '0.8') . "</priority>\n";
+        echo "  </url>\n";
+    }
+    echo '</urlset>';
+    exit;
+}
+
+// ============================================================================
+// 6. API DE IMAGENS EM BASE64 COM CACHE SEGURO
+// ============================================================================
+if ($isGet && preg_match('#^/api/imagens/([a-zA-Z0-9._-]+\.(?:jpg|jpeg|png|webp))$#i', $path, $matches)) {
+    $filename = basename($matches[1]);
+    $realImagesDir = realpath(__DIR__ . '/assets/images');
+    $imagePath = realpath(__DIR__ . '/assets/images/' . $filename);
+
+    if ($imagePath === false || $realImagesDir === false || !str_starts_with($imagePath, $realImagesDir . DIRECTORY_SEPARATOR) || !is_file($imagePath)) {
+        header('Content-Type: application/json; charset=utf-8');
+        http_response_code(404);
+        echo json_encode(['error' => 'Imagem não encontrada.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $contents = file_get_contents($imagePath);
+    if ($contents === false) {
+        http_response_code(404);
+        exit;
+    }
+
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    $mime = match ($ext) {
+        'png' => 'image/png',
+        'webp' => 'image/webp',
+        default => 'image/jpeg',
+    };
+
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store, private, max-age=0');
+    echo json_encode(['data' => 'data:' . $mime . ';base64,' . base64_encode($contents)], JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+// ============================================================================
+// 7. WEBHOOK DO MERCADO PAGO COM ASSINATURA CRIPTOGRÁFICA
+// ============================================================================
+if ($method === 'POST' && $path === '/webhooks/mercado-pago') {
+    header('Content-Type: application/json; charset=utf-8');
+    $payload = json_decode(file_get_contents('php://input') ?: '{}', true);
+    $dataId = (string) ($_GET['data_id'] ?? $_GET['data.id'] ?? $_GET['id'] ?? ($payload['data']['id'] ?? ''));
+
+    if (!preg_match('/^\d{1,30}$/', $dataId)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'invalid_data_id']);
+        exit;
+    }
+
+    try {
+        $payment = $mercadoPago->payment($dataId);
+        $orderId = (string) ($payment['external_reference'] ?? '');
+        $order = is_uuid($orderId) ? $store->orderById($orderId) : $store->orderByPaymentId((string) ($payment['id'] ?? ''));
+        $paidCents = (int) round(((float) ($payment['transaction_amount'] ?? 0)) * 100);
+
+        if (!$order || !hash_equals((string) $order['id'], $orderId) || $paidCents !== (int) $order['total_cents']) {
+            throw new RuntimeException('Pagamento não corresponde ao pedido informado.');
+        }
+
+        $store->updateOrderPayment(
+            $order['id'], 
+            $mercadoPago->normalizeStatus((string) ($payment['status'] ?? 'pending')), 
+            (string) $payment['id']
+        );
+        echo json_encode(['ok' => true]);
+    } catch (Throwable $exception) {
+        error_log('Webhook Mercado Pago rejeitado: ' . $exception->getMessage());
+        http_response_code(422);
+        echo json_encode(['error' => 'payment_not_processed']);
+    }
+    exit;
+}
+
+// ============================================================================
+// 8. ROTA: PÁGINA INICIAL (HOME / VITRINE)
+// ============================================================================
+if ($isGet && $path === '/') {
+    // Filtra até 4 doces em destaque para a vitrine principal
+    $products = array_values(array_filter($store->products(), fn (array $p): bool => (bool) $p['featured']));
+    render('home', [
+        'products' => array_slice($products, 0, 4), 
+        'title' => 'Doces artesanais feitos em Sorocaba — Elda Bolos e Doces',
+        'description' => 'Bolos caseiros, tortas finas e brigadeiros artesanais em Sorocaba. Faça sua encomenda na Elda Bolos e Doces ou peça via delivery.'
+    ]);
+    exit;
+}
+
+// ============================================================================
+// 9. ROTA: CARDÁPIO COMPLETO (CATÁLOGO COM BUSCA E CATEGORIAS)
+// ============================================================================
+if ($isGet && $path === '/cardapio') {
+    $products = $store->products();
+    $category = trim(substr(is_string($_GET['categoria'] ?? null) ? $_GET['categoria'] : '', 0, 60));
+    $search = trim(substr(is_string($_GET['busca'] ?? null) ? $_GET['busca'] : '', 0, 100));
+
+    if ($category !== '') {
+        $products = array_values(array_filter($products, fn (array $p): bool => $p['category'] === $category));
+    }
+    if ($search !== '') {
+        $products = array_values(array_filter($products, fn (array $p): bool => stripos($p['name'] . ' ' . $p['description'], $search) !== false));
+    }
+
+    $categories = array_values(array_unique(array_column($store->products(), 'category')));
+    
+    $seoTitle = $category !== '' ? "Cardápio de {$category} — Elda Bolos e Doces" : 'Nosso Cardápio Artesanal';
+    render('catalog', compact('products', 'categories', 'category', 'search') + [
+        'title' => $seoTitle,
+        'description' => 'Conheça todos os nossos bolos, tortas, macarons e brigadeiros artesanais. Produção diária com ingredientes nobres em Sorocaba.'
+    ]);
+    exit;
+}
+
+// ============================================================================
+// 10. ROTA: DETALHE DO PRODUTO (SEO ON-PAGE COM SLUG AMIGÁVEL)
+// ============================================================================
+if ($isGet && preg_match('#^/produto/([a-z0-9-]+)$#', $path, $matches)) {
+    $product = $store->productBySlug($matches[1]);
+    if (!$product || !(bool) $product['active']) {
+        render('errors/status', [
+            'code' => 404, 
+            'title' => 'Doce não encontrado', 
+            'message' => 'Este doce artesanal saiu temporariamente da vitrine ou nunca esteve por aqui.'
+        ], 404);
+    } else {
+        $related = array_values(array_filter(
+            $store->products(), 
+            fn (array $p): bool => $p['id'] !== $product['id'] && $p['category'] === $product['category']
+        ));
+        render('product', compact('product', 'related') + [
+            'title' => $product['name'] . ' — ' . $product['category'],
+            'description' => substr((string) $product['description'], 0, 155)
+        ]);
+    }
+    exit;
+}
+
+// ============================================================================
+// 11. ROTAS: SACOLA DE COMPRAS (CARRINHO)
+// ============================================================================
+if ($method === 'POST' && $path === '/carrinho/adicionar') {
+    verify_csrf('/carrinho');
+    $id = (string) ($_POST['product_id'] ?? '');
+    $quantity = max(1, min(20, (int) ($_POST['quantity'] ?? 1)));
+    $product = is_uuid($id) ? $store->productById($id) : null;
+
+    if (!$product || !(bool) $product['active'] || (int) $product['stock'] < 1) {
+        flash('error', 'Este doce não está disponível no momento.');
+    } else {
+        $_SESSION['cart'][$id] = min((int) $product['stock'], (int) ($_SESSION['cart'][$id] ?? 0) + $quantity);
+        flash('success', $product['name'] . ' foi adicionado à sua sacola com sucesso.');
+    }
+    redirect(safe_redirect_target((string) ($_POST['redirect_to'] ?? '/carrinho'), '/carrinho'));
+}
+
+if ($isGet && $path === '/carrinho') {
+    render('cart', ['cart' => cart_details(), 'title' => 'Sua Sacola de Doces']);
+    exit;
+}
+
+if ($method === 'POST' && $path === '/carrinho/atualizar') {
+    verify_csrf('/carrinho');
+    foreach ((array) ($_POST['quantity'] ?? []) as $id => $quantity) {
+        $id = (string) $id;
+        $product = is_uuid($id) ? $store->productById($id) : null;
+        $quantity = max(0, min((int) ($product['stock'] ?? 0), (int) $quantity));
+        if ($quantity === 0) {
+            unset($_SESSION['cart'][$id]);
+        } else {
+            $_SESSION['cart'][$id] = $quantity;
+        }
+    }
+    flash('success', 'Sua sacola foi atualizada com sucesso.');
+    redirect('/carrinho');
+}
+
+if ($method === 'POST' && $path === '/carrinho/remover') {
+    verify_csrf('/carrinho');
+    $productId = (string) ($_POST['product_id'] ?? '');
+    if (is_uuid($productId)) {
+        unset($_SESSION['cart'][$productId]);
+    }
+    flash('info', 'Item removido da sua sacola.');
+    redirect('/carrinho');
+}
+
+// ============================================================================
+// 12. ROTAS: LOGIN & AUTENTICAÇÃO COM 2FA
+// ============================================================================
+if ($isGet && $path === '/entrar') {
+    header('Cache-Control: no-store, private');
+    if (current_user()) redirect('/minha-conta');
+    render('auth/login', ['title' => 'Entrar na sua conta']);
+    exit;
+}
+
+if ($method === 'POST' && $path === '/entrar') {
+    verify_csrf('/entrar');
+    if (login_is_limited()) {
+        render('errors/status', [
+            'code' => 429, 
+            'title' => 'Muitas tentativas de acesso', 
+            'message' => 'Espere alguns minutos antes de tentar entrar novamente.'
+        ], 429);
+        exit;
+    }
+
+    $email = strtolower(post_string('email'));
+    $user = filter_var($email, FILTER_VALIDATE_EMAIL) ? $store->userByEmail($email) : null;
+
+    if (!$user || !password_verify((string) ($_POST['password'] ?? ''), $user['password_hash'])) {
+        register_failed_login();
+        flash('error', 'E-mail ou senha incorretos.');
+        redirect('/entrar');
+    }
+
+    $target = (string) ($_SESSION['intended'] ?? ($user['role'] === 'admin' ? '/admin' : '/minha-conta'));
+    session_regenerate_id(true);
+
+    try {
+        begin_two_factor($user, $target);
+    } catch (Throwable $exception) {
+        error_log('Falha ao enviar código 2FA: ' . $exception->getMessage());
+        flash('error', 'Não conseguimos enviar o código agora. Tente novamente em instantes.');
+        redirect('/entrar');
+    }
+
+    unset($_SESSION['login_attempts']);
+    redirect('/verificar-codigo');
+}
+
+// ============================================================================
+// 13. ROTAS: VERIFICAÇÃO EM DUAS ETAPAS (2FA)
+// ============================================================================
+if ($isGet && $path === '/verificar-codigo') {
+    header('Cache-Control: no-store, private');
+    $pending = $_SESSION['two_factor'] ?? null;
+    if (!is_array($pending)) {
+        flash('info', 'Entre com seu e-mail e senha para receber um novo código.');
+        redirect('/entrar');
+    }
+    if (time() > (int) $pending['expires_at']) {
+        $restart = ($pending['purpose'] ?? 'login') === 'registration' ? '/criar-conta' : '/entrar';
+        unset($_SESSION['two_factor']);
+        flash('error', 'O código de verificação expirou. Comece novamente para receber outro.');
+        redirect($restart);
+    }
+
+    $pendingUser = pending_two_factor_identity($pending);
+    if (!$pendingUser) {
+        unset($_SESSION['two_factor']);
+        redirect('/entrar');
+    }
+
+    render('auth/two-factor', [
+        'maskedEmail' => masked_email((string) $pendingUser['email']),
+        'expiresAt' => (int) $pending['expires_at'],
+        'title' => 'Verificar código de segurança',
+    ]);
+    exit;
+}
+
+if ($method === 'POST' && $path === '/verificar-codigo') {
+    verify_csrf('/verificar-codigo');
+    $pending = $_SESSION['two_factor'] ?? null;
+
+    if (!is_array($pending)) {
+        flash('error', 'Sua verificação expirou. Entre novamente.');
+        redirect('/entrar');
+    }
+    if (time() > (int) $pending['expires_at']) {
+        $restart = ($pending['purpose'] ?? 'login') === 'registration' ? '/criar-conta' : '/entrar';
+        unset($_SESSION['two_factor']);
+        flash('error', 'O código expirou. Comece novamente para receber outro.');
+        redirect($restart);
+    }
+
+    $code = preg_replace('/\D/', '', post_string('code', 12)) ?? '';
+    if (strlen($code) !== 6 || !verify_two_factor_code($code)) {
+        $_SESSION['two_factor']['attempts'] = (int) $pending['attempts'] + 1;
+        $remaining = 5 - (int) $_SESSION['two_factor']['attempts'];
+        if ($remaining <= 0) {
+            unset($_SESSION['two_factor']);
+            if (($pending['purpose'] ?? 'login') === 'login') register_failed_login();
+            flash('error', 'Limite de tentativas atingido. Por favor, comece novamente.');
+            redirect(($pending['purpose'] ?? 'login') === 'registration' ? '/criar-conta' : '/entrar');
+        }
+        flash('error', 'Código incorreto. Você ainda tem ' . $remaining . ' tentativa' . ($remaining === 1 ? '' : 's') . '.');
+        redirect('/verificar-codigo');
+    }
+
+    // Se a validação foi para cadastro, cria o usuário no banco agora
+    if (($pending['purpose'] ?? 'login') === 'registration') {
+        $registration = pending_two_factor_identity($pending);
+        if (!$registration) {
+            unset($_SESSION['two_factor']);
+            redirect('/criar-conta');
+        }
+        if ($store->userByEmail((string) $registration['email'])) {
+            unset($_SESSION['two_factor']);
+            flash('error', 'Este e-mail foi cadastrado enquanto você confirmava. Entre na conta existente.');
+            redirect('/entrar');
+        }
+        $userId = $store->createUser(
+            (string) $registration['name'],
+            (string) $registration['email'],
+            (string) $registration['password_hash'],
+            'customer'
+        );
+        $user = $store->userById($userId);
+    } else {
+        $userId = (string) ($pending['user_id'] ?? '');
+        $user = is_uuid($userId) ? $store->userById($userId) : null;
+    }
+
+    if (!$user) {
+        unset($_SESSION['two_factor']);
+        redirect('/entrar');
+    }
+
+    $target = safe_redirect_target((string) $pending['target'], $user['role'] === 'admin' ? '/admin' : '/minha-conta');
+    session_regenerate_id(true);
+    $_SESSION['user_id'] = (string) $user['id'];
+    $_SESSION['csrf'] = bin2hex(random_bytes(32));
+    unset($_SESSION['two_factor'], $_SESSION['intended'], $_SESSION['login_attempts']);
+
+    flash('success', 'Identidade confirmada com sucesso. Bem-vindo(a), ' . explode(' ', $user['name'])[0] . '!');
+    redirect($target);
+}
+
+if ($method === 'POST' && $path === '/verificar-codigo/reenviar') {
+    verify_csrf('/verificar-codigo');
+    $pending = $_SESSION['two_factor'] ?? null;
+    if (!is_array($pending)) redirect('/entrar');
+
+    if (time() - (int) $pending['sent_at'] < 60) {
+        flash('info', 'Aguarde um minuto antes de solicitar outro código.');
+        redirect('/verificar-codigo');
+    }
+    if ((int) $pending['resend_count'] >= 4) {
+        $restart = ($pending['purpose'] ?? 'login') === 'registration' ? '/criar-conta' : '/entrar';
+        unset($_SESSION['two_factor']);
+        flash('error', 'Limite de reenvios atingido. Comece novamente.');
+        redirect($restart);
+    }
+
+    $user = pending_two_factor_identity($pending);
+    if (!$user) {
+        $restart = ($pending['purpose'] ?? 'login') === 'registration' ? '/criar-conta' : '/entrar';
+        unset($_SESSION['two_factor']);
+        redirect($restart);
+    }
+
+    try {
+        begin_two_factor($user, (string) $pending['target'], (int) $pending['resend_count'] + 1, (string) ($pending['purpose'] ?? 'login'));
+        flash('success', 'Enviamos um novo código para seu e-mail.');
+    } catch (Throwable $exception) {
+        error_log('Falha ao reenviar 2FA: ' . $exception->getMessage());
+        flash('error', 'Não foi possível reenviar o código agora.');
+    }
+    redirect('/verificar-codigo');
+}
+
+// ============================================================================
+// 13.1 ROTAS: RECUPERAÇÃO E REDEFINIÇÃO DE SENHA
+// ============================================================================
+if ($isGet && $path === '/esqueci-senha') {
+    header('Cache-Control: no-store, private');
+    if (current_user()) redirect('/minha-conta');
+    $email = (string) ($_GET['email'] ?? ($_SESSION['reset_email'] ?? ''));
+    render('auth/forgot-password', [
+        'title' => 'Recuperar senha',
+        'email' => $email,
+    ]);
+    exit;
+}
+
+if ($method === 'POST' && $path === '/esqueci-senha') {
+    verify_csrf('/esqueci-senha');
+    if (login_is_limited()) {
+        render('errors/status', [
+            'code' => 429,
+            'title' => 'Muitas solicitações',
+            'message' => 'Aguarde alguns minutos antes de solicitar um novo código.'
+        ], 429);
+        exit;
+    }
+
+    $email = strtolower(post_string('email'));
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        flash('error', 'Informe um endereço de e-mail válido.');
+        redirect('/esqueci-senha');
+    }
+
+    $user = $store->userByEmail($email);
+    if (!$user) {
+        flash('error', 'Não encontramos nenhuma conta com o e-mail informado.');
+        redirect('/esqueci-senha?email=' . urlencode($email));
+    }
+
+    $code = generate_keyboard_reset_code(12);
+    try {
+        store_password_reset_code($email, (string) $user['id'], $code, 15);
+        $mailer->sendPasswordResetCode($user, $code, 15);
+        $_SESSION['reset_email'] = $email;
+        flash('success', 'Enviamos o código aleatório com caracteres do teclado para o seu e-mail. Verifique sua caixa de entrada.');
+        redirect('/redefinir-senha?email=' . urlencode($email));
+    } catch (Throwable $exception) {
+        error_log('Falha ao enviar código de recuperação: ' . $exception->getMessage());
+        flash('error', 'Não conseguimos enviar o e-mail agora. Verifique a conexão e tente novamente.');
+        redirect('/esqueci-senha?email=' . urlencode($email));
+    }
+}
+
+if ($isGet && $path === '/redefinir-senha') {
+    header('Cache-Control: no-store, private');
+    if (current_user()) redirect('/minha-conta');
+    $email = (string) ($_GET['email'] ?? ($_SESSION['reset_email'] ?? ''));
+    render('auth/reset-password', [
+        'title' => 'Redefinir senha',
+        'email' => $email,
+    ]);
+    exit;
+}
+
+if ($method === 'POST' && $path === '/redefinir-senha') {
+    verify_csrf('/redefinir-senha');
+    $email = strtolower(post_string('email'));
+    $code = trim(post_string('code', 64));
+    $password = (string) ($_POST['password'] ?? '');
+    $passwordConfirmation = (string) ($_POST['password_confirmation'] ?? '');
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        flash('error', 'Informe um e-mail válido.');
+        redirect('/redefinir-senha');
+    }
+
+    if ($code === '') {
+        flash('error', 'Informe o código recebido no seu e-mail.');
+        redirect('/redefinir-senha?email=' . urlencode($email));
+    }
+
+    if (strlen($password) < 8) {
+        flash('error', 'A nova senha deve ter no mínimo 8 caracteres.');
+        redirect('/redefinir-senha?email=' . urlencode($email));
+    }
+
+    if ($password !== $passwordConfirmation) {
+        flash('error', 'A confirmação de senha não confere com a nova senha digitada.');
+        redirect('/redefinir-senha?email=' . urlencode($email));
+    }
+
+    $result = verify_password_reset_code($email, $code);
+    if (!$result['success']) {
+        if ($result['error'] === 'invalid') {
+            $remaining = (int) ($result['remaining'] ?? 0);
+            if ($remaining > 0) {
+                flash('error', 'Código incorreto. Você ainda tem ' . $remaining . ' tentativa' . ($remaining === 1 ? '' : 's') . '.');
+            } else {
+                flash('error', 'Limite de tentativas excedido para este código. Solicite um novo código de recuperação.');
+                redirect('/esqueci-senha?email=' . urlencode($email));
+            }
+        } else {
+            flash('error', 'O código de verificação expirou ou é inválido. Solicite um novo código.');
+            redirect('/esqueci-senha?email=' . urlencode($email));
+        }
+        redirect('/redefinir-senha?email=' . urlencode($email));
+    }
+
+    $user = $store->userByEmail($email);
+    if (!$user) {
+        flash('error', 'Conta não localizada.');
+        redirect('/entrar');
+    }
+
+    $newHash = bcrypt_hash($password);
+    $store->updateUserPassword((string) $user['id'], $newHash);
+    unset($_SESSION['reset_email']);
+
+    session_regenerate_id(true);
+    flash('success', 'Sua senha foi redefinida com sucesso! Você já pode entrar com a nova senha.');
+    redirect('/entrar');
+}
+
+// ============================================================================
+// 14. ROTAS: CADASTRO DE CLIENTE
+// ============================================================================
+if ($isGet && $path === '/criar-conta') {
+    render('auth/register', ['title' => 'Criar sua conta']);
+    exit;
+}
+
+if ($method === 'POST' && $path === '/criar-conta') {
+    verify_csrf('/criar-conta');
+    $name = post_string('name', 100);
+    $email = strtolower(post_string('email'));
+    $password = (string) ($_POST['password'] ?? '');
+    $errors = [];
+
+    if (strlen($name) < 3) $errors[] = 'Informe seu nome completo.';
+    if (strlen($email) > 190 || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Informe um e-mail válido.';
+    elseif ($store->userByEmail($email)) $errors[] = 'Já existe uma conta registrada com este e-mail.';
+    if (strlen($password) < 8 || !preg_match('/[A-Z]/', $password) || !preg_match('/[0-9]/', $password)) {
+        $errors[] = 'A senha precisa de pelo menos 8 caracteres, uma letra maiúscula e um número.';
+    }
+    if (strlen($password) > 72) $errors[] = 'A senha pode ter no máximo 72 caracteres.';
+
+    if ($errors !== []) {
+        foreach ($errors as $error) flash('error', $error);
+        redirect('/criar-conta');
+    }
+
+    $pendingRegistration = [
+        'name' => $name,
+        'email' => $email,
+        'password_hash' => bcrypt_hash($password),
+        'role' => 'customer',
+    ];
+    session_regenerate_id(true);
+
+    try {
+        begin_two_factor($pendingRegistration, '/minha-conta', 0, 'registration');
+        flash('success', 'Enviamos um código de 6 dígitos. Sua conta será ativada após a confirmação.');
+        redirect('/verificar-codigo');
+    } catch (Throwable $exception) {
+        error_log('Falha ao enviar 2FA no cadastro: ' . $exception->getMessage());
+        unset($_SESSION['two_factor']);
+        flash('error', 'O código não pôde ser entregue e nenhuma conta foi criada. Tente novamente.');
+        redirect('/criar-conta');
+    }
+}
+
+// ============================================================================
+// 15. ROTA: LOGOUT SEGURO
+// ============================================================================
+if ($method === 'POST' && $path === '/sair') {
+    verify_csrf('/');
+    unset($_SESSION['user_id'], $_SESSION['two_factor']);
+    session_regenerate_id(true);
+    flash('info', 'Você saiu da sua conta com segurança. Até breve!');
+    redirect('/');
+}
+
+// ============================================================================
+// 16. ROTAS: CHECKOUT E PAGAMENTO PIX
+// ============================================================================
+if ($isGet && $path === '/checkout') {
+    $user = require_auth();
+    $cart = cart_details();
+    if ($cart['items'] === []) {
+        flash('info', 'Sua sacola está vazia.');
+        redirect('/cardapio');
+    }
+
+    // Carrega dados de entrega previamente salvos no banco para preenchimento automático
+    $savedAddress = $store->userDeliveryAddress((string) $user['id']);
+
+    render('checkout', compact('cart', 'user', 'savedAddress') + ['title' => 'Finalizar Pedido']);
+    exit;
+}
+
+if ($method === 'POST' && $path === '/checkout') {
+    verify_csrf('/checkout');
+    $user = require_auth();
+    $cart = cart_details();
+    if ($cart['items'] === []) redirect('/cardapio');
+
+    $customer = [
+        'name' => post_string('name', 100),
+        'email' => strtolower((string) $user['email']),
+        'cpf' => post_string('cpf', 18),
+        'phone' => post_string('phone', 30),
+        'zip' => post_string('zip', 12),
+        'address' => post_string('address', 180),
+        'number' => post_string('number', 20),
+        'complement' => post_string('complement', 80),
+        'city' => post_string('city', 80),
+        'payment' => 'pix',
+    ];
+
+    if ($customer['name'] === '' || $customer['phone'] === '' || $customer['zip'] === '' || $customer['address'] === '' || $customer['number'] === '' || $customer['city'] === '') {
+        flash('error', 'Preencha todos os dados obrigatórios para entrega.');
+        redirect('/checkout');
+    }
+    if (!valid_cpf($customer['cpf'])) {
+        flash('error', 'Informe um número de CPF válido para emitir o PIX.');
+        redirect('/checkout');
+    }
+
+    // Persistência ou atualização dos dados de entrega no banco de dados
+    $saveAddressRequested = !empty($_POST['save_address']);
+    $existingAddress = $store->userDeliveryAddress((string) $user['id']);
+
+    if ($saveAddressRequested) {
+        // Grava no banco quando o usuário solicita salvar os dados
+        $deliveryData = [
+            'name' => $customer['name'],
+            'email' => strtolower((string) $user['email']),
+            'cpf' => $customer['cpf'],
+            'phone' => $customer['phone'],
+            'zip' => $customer['zip'],
+            'address' => $customer['address'],
+            'number' => $customer['number'],
+            'complement' => $customer['complement'],
+            'city' => $customer['city'],
+            'updated_at' => date(DATE_ATOM),
+        ];
+        $store->saveUserDeliveryAddress((string) $user['id'], $deliveryData);
+    } elseif ($existingAddress !== null) {
+        // Se o cliente já possuía endereço e alterou algum campo, sincroniza com o banco
+        $isChanged = false;
+        foreach (['name', 'cpf', 'phone', 'zip', 'address', 'number', 'complement', 'city'] as $k) {
+            if (($existingAddress[$k] ?? '') !== ($customer[$k] ?? '')) {
+                $isChanged = true;
+                break;
+            }
+        }
+        if ($isChanged) {
+            $deliveryData = [
+                'name' => $customer['name'],
+                'email' => strtolower((string) $user['email']),
+                'cpf' => $customer['cpf'],
+                'phone' => $customer['phone'],
+                'zip' => $customer['zip'],
+                'address' => $customer['address'],
+                'number' => $customer['number'],
+                'complement' => $customer['complement'],
+                'city' => $customer['city'],
+                'updated_at' => date(DATE_ATOM),
+            ];
+            $store->saveUserDeliveryAddress((string) $user['id'], $deliveryData);
+        }
+    }
+    if (!$mercadoPago->isConfigured()) {
+        flash('error', 'O PIX ainda não foi conectado ao Mercado Pago. Configure o Access Token para finalizar.');
+        redirect('/checkout');
+    }
+
+    $items = array_map(fn (array $line): array => [
+        'product_id' => (string) $line['product']['id'],
+        'name' => $line['product']['name'],
+        'quantity' => $line['quantity'],
+        'unit_cents' => (int) $line['product']['price_cents']
+    ], $cart['items']);
+
+    $orderCustomer = $customer;
+    unset($orderCustomer['cpf']); // Não armazena CPF sensível em texto claro no registro de entrega
+    $order = $store->createOrder((string) $user['id'], $orderCustomer, $items, $cart['total_cents']);
+
+    try {
+        $pix = $mercadoPago->createPix($order, $customer, request_base_url() . '/webhooks/mercado-pago');
+        $store->updateOrderPayment($order['id'], $pix['status'], $pix['payment_id'], [
+            'pix_code' => $pix['pix_code'],
+            'pix_qr_base64' => $pix['pix_qr_base64'],
+            'payment_expires_at' => $pix['expires_at'],
+        ]);
+        unset($_SESSION['cart']);
+        redirect('/pedido/sucesso/' . rawurlencode((string) $order['number']));
+    } catch (Throwable $exception) {
+        $store->updateOrderPayment($order['id'], 'rejected', null);
+        error_log('Falha ao gerar PIX para ' . $order['number'] . ': ' . $exception->getMessage());
+        flash('error', 'Não foi possível gerar a cobrança PIX agora. Nenhuma cobrança foi concluída; tente novamente.');
+        redirect('/checkout');
+    }
+}
+
+if ($isGet && preg_match('#^/api/pedidos/([A-Za-z0-9]+)/status$#', $path, $matches)) {
+    header('Content-Type: application/json; charset=utf-8');
+    $user = require_auth();
+    $order = null;
+    foreach ($store->orders((string) $user['id']) as $candidate) {
+        if ($candidate['number'] === $matches[1]) $order = $candidate;
+    }
+    if (!$order) {
+        http_response_code(404);
+        echo json_encode(['error' => 'not_found']);
+        exit;
+    }
+
+    $paymentStatus = (string) ($order['payment_status'] ?? 'pending');
+    if ($paymentStatus === 'pending' && !empty($order['payment_id'])) {
+        try {
+            $payment = $mercadoPago->payment((string) $order['payment_id']);
+            $currentStatus = $mercadoPago->normalizeStatus((string) ($payment['status'] ?? 'pending'));
+            if ($currentStatus !== 'pending') {
+                $store->updateOrderPayment((string) $order['id'], $currentStatus, (string) $payment['id']);
+                $paymentStatus = $currentStatus;
+            }
+        } catch (Throwable $e) {}
+    }
+
+    echo json_encode(['status' => $paymentStatus]);
+    exit;
+}
+
+if ($isGet && preg_match('#^/pedido/sucesso/([A-Za-z0-9]+)$#', $path, $matches)) {
+    $user = require_auth();
+    $order = null;
+    foreach ($store->orders((string) $user['id']) as $candidate) {
+        if ($candidate['number'] === $matches[1]) $order = $candidate;
+    }
+    if (!$order) {
+        render('errors/status', [
+            'code' => 404, 
+            'title' => 'Pedido não localizado', 
+            'message' => 'Não localizamos este pedido associado à sua conta.'
+        ], 404);
+        exit;
+    }
+
+    // Auto-sincronização com o Mercado Pago se o pedido ainda estiver pendente
+    if (($order['payment_status'] ?? 'pending') === 'pending' && !empty($order['payment_id'])) {
+        try {
+            $payment = $mercadoPago->payment((string) $order['payment_id']);
+            $currentStatus = $mercadoPago->normalizeStatus((string) ($payment['status'] ?? 'pending'));
+            if ($currentStatus !== 'pending') {
+                $store->updateOrderPayment((string) $order['id'], $currentStatus, (string) $payment['id']);
+                $order['payment_status'] = $currentStatus;
+            }
+        } catch (Throwable $e) {}
+    }
+
+    render('order-success', compact('order') + ['title' => 'Pedido Confirmado']);
+    exit;
+}
+
+// ============================================================================
+// 17. ROTA: MINHA CONTA (ÁREA DO CLIENTE)
+// ============================================================================
+if ($isGet && $path === '/minha-conta') {
+    $user = require_auth();
+    $orders = $store->orders((string) $user['id']);
+    render('account', compact('user', 'orders') + ['title' => 'Minha Conta']);
+    exit;
+}
+
+// ============================================================================
+// 18. ROTAS: PAINEL ADMINISTRATIVO (ADMIN RBAC)
+// ============================================================================
+if ($isGet && $path === '/admin') {
+    require_admin();
+    render('admin/dashboard', [
+        'metrics' => $store->dashboard(),
+        'orders' => array_slice($store->orders(), 0, 8),
+        'products' => $store->products(true),
+        'title' => 'Painel Administrativo'
+    ]);
+    exit;
+}
+
+if ($isGet && $path === '/admin/pedidos') {
+    require_admin();
+    render('admin/orders', [
+        'orders' => $store->orders(),
+        'title' => 'Gestão de Pedidos'
+    ]);
+    exit;
+}
+
+if ($isGet && ($path === '/admin/produtos/novo' || preg_match('#^/admin/produtos/([0-9a-f-]{36})/editar$#i', $path, $matches))) {
+    require_admin();
+    $product = isset($matches[1]) && is_uuid($matches[1]) ? $store->productById($matches[1]) : null;
+    if (isset($matches[1]) && !$product) {
+        render('errors/status', [
+            'code' => 404, 
+            'title' => 'Produto não encontrado', 
+            'message' => 'O produto solicitado para edição não existe.'
+        ], 404);
+        exit;
+    }
+    render('admin/product-form', compact('product') + [
+        'title' => $product ? 'Editar Produto' : 'Novo Produto'
+    ]);
+    exit;
+}
+
+if ($method === 'POST' && ($path === '/admin/produtos/novo' || preg_match('#^/admin/produtos/([0-9a-f-]{36})/editar$#i', $path, $matches))) {
+    require_admin();
+    verify_csrf($path);
+    $id = isset($matches[1]) && is_uuid($matches[1]) ? $matches[1] : '';
+    $existingProduct = ($id !== '' && is_uuid($id)) ? $store->productById($id) : null;
+    $name = post_string('name', 120);
+
+    // ========================================================================
+    // PROCESSAMENTO DA IMAGEM: UPLOAD DE ARQUIVO (JPG/PNG) OU SELEÇÃO
+    // ========================================================================
+    $image = '';
+
+    // 1. Processar envio de arquivo por upload
+    if (isset($_FILES['image_file']) && is_array($_FILES['image_file']) && $_FILES['image_file']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $fileError = $_FILES['image_file']['error'];
+        if ($fileError === UPLOAD_ERR_INI_SIZE || $fileError === UPLOAD_ERR_FORM_SIZE || $_FILES['image_file']['size'] > 4 * 1024 * 1024) {
+            flash('error', 'A imagem enviada excede o limite máximo permitido de 4MB.');
+            redirect($path);
+        }
+        if ($fileError !== UPLOAD_ERR_OK) {
+            flash('error', 'Falha no envio da imagem (código de erro: ' . $fileError . '). Tente novamente.');
+            redirect($path);
+        }
+
+        $tmpFile = $_FILES['image_file']['tmp_name'];
+        if (!is_uploaded_file($tmpFile)) {
+            flash('error', 'Arquivo de upload inválido.');
+            redirect($path);
+        }
+
+        // Validação estrita do tipo MIME real da imagem
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = $finfo ? finfo_file($finfo, $tmpFile) : '';
+        if ($finfo) {
+            finfo_close($finfo);
+        }
+
+        if (!in_array($mime, ['image/jpeg', 'image/png'], true)) {
+            flash('error', 'Formato de imagem inválido. Aceitamos somente fotos JPG ou PNG.');
+            redirect($path);
+        }
+
+        // Validação da integridade dos dados da imagem
+        $imageInfo = @getimagesize($tmpFile);
+        if ($imageInfo === false || !in_array($imageInfo[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG], true)) {
+            flash('error', 'O arquivo enviado não é uma imagem JPG ou PNG válida.');
+            redirect($path);
+        }
+
+        $extension = ($imageInfo[2] === IMAGETYPE_PNG) ? 'png' : 'jpg';
+        $slugBase = slugify($name) ?: 'doce';
+        $slugBase = substr($slugBase, 0, 30);
+        $newFilename = 'prod-' . $slugBase . '-' . bin2hex(random_bytes(4)) . '.' . $extension;
+        $destPath = __DIR__ . '/assets/images/' . $newFilename;
+
+        if (!move_uploaded_file($tmpFile, $destPath)) {
+            flash('error', 'Erro ao salvar a imagem no servidor. Tente novamente.');
+            redirect($path);
+        }
+        @chmod($destPath, 0644);
+        $image = $newFilename;
+    }
+
+    // 2. Se nenhum arquivo novo foi enviado, usar seleção da galeria ou manter existente
+    if ($image === '') {
+        $selectedImage = basename((string) ($_POST['image'] ?? ''));
+        if ($selectedImage !== '' && preg_match('/^[a-zA-Z0-9._-]+\.(?:jpg|jpeg|png|webp)$/i', $selectedImage) && is_file(__DIR__ . '/assets/images/' . $selectedImage)) {
+            $image = $selectedImage;
+        } elseif ($existingProduct && !empty($existingProduct['image']) && is_file(__DIR__ . '/assets/images/' . $existingProduct['image'])) {
+            $image = $existingProduct['image'];
+        } else {
+            $image = 'chocolate.jpg';
+        }
+    }
+
+    $product = [
+        'id' => $id,
+        'name' => $name,
+        'slug' => slugify(post_string('slug') ?: $name),
+        'description' => post_string('description', 800),
+        'price_cents' => (int) round(((float) str_replace(',', '.', (string) ($_POST['price'] ?? 0))) * 100),
+        'compare_cents' => null,
+        'category' => post_string('category', 60),
+        'image' => $image,
+        'stock' => max(0, (int) ($_POST['stock'] ?? 0)),
+        'featured' => isset($_POST['featured']) ? 1 : 0,
+        'active' => isset($_POST['active']) ? 1 : 0,
+        'portion' => post_string('portion', 80),
+    ];
+
+    if ($product['name'] === '' || $product['description'] === '' || $product['price_cents'] < 100 || $product['category'] === '') {
+        flash('error', 'Preencha nome, descrição, categoria e um preço válido.');
+        redirect($path);
+    }
+
+    try {
+        $store->saveProduct($product);
+        flash('success', $id !== '' ? 'Produto atualizado na vitrine.' : 'Novo doce cadastrado na vitrine.');
+    } catch (Throwable $exception) {
+        error_log('Falha ao salvar produto: ' . $exception->getMessage());
+        flash('error', 'Não foi possível salvar o produto. Confira se o nome ou slug já estão em uso.');
+        redirect($path);
+    }
+    redirect('/admin');
+}
+
+if ($method === 'POST' && preg_match('#^/admin/pedidos/([0-9a-f-]{36})/status$#i', $path, $matches)) {
+    require_admin();
+    verify_csrf('/admin/pedidos');
+    $status = (string) ($_POST['status'] ?? '');
+    if (is_uuid($matches[1]) && in_array($status, ['received', 'preparing', 'shipping', 'delivered', 'cancelled'], true)) {
+        $store->updateOrderStatus($matches[1], $status);
+        flash('success', 'Status da entrega atualizado com sucesso.');
+    }
+    redirect('/admin/pedidos');
+}
+
+// ============================================================================
+// 19. ROTAS: PÁGINAS DE STATUS E TESTE DE RESPOSTAS HTTP
+// ============================================================================
+if ($isGet && $path === '/status') {
+    render('status-index', ['title' => 'Status do Sistema']);
+    exit;
+}
+
+if ($isGet && preg_match('#^/status/(400|401|403|404|429|500|503)$#', $path, $matches)) {
+    $code = (int) $matches[1];
+    $messages = [
+        400 => ['Pedido confuso', 'Alguma informação chegou incompleta. Volte e tente novamente.'],
+        401 => ['Identificação necessária', 'Entre na sua conta para acessar este conteúdo.'],
+        403 => ['Área reservada', 'Você não tem permissão para abrir esta página.'],
+        404 => ['Ops, essa doçura sumiu', 'A página que você procura não está mais nesta vitrine.'],
+        429 => ['Um pouquinho de calma', 'Recebemos muitas tentativas em pouco tempo. Tente novamente em alguns minutos.'],
+        500 => ['A receita desandou', 'Tivemos um imprevisto interno e já estamos cuidando disso.'],
+        503 => ['Forno aquecendo', 'Estamos preparando tudo para voltar em instantes.'],
+    ];
+    render('errors/status', [
+        'code' => $code, 
+        'title' => $messages[$code][0], 
+        'message' => $messages[$code][1]
+    ], $code);
+    exit;
+}
+
+// ============================================================================
+// 20. FALLBACK: RESPOSTA 404 PADRÃO (PREVINE SOFT 404 PARA O GOOGLE)
+// ============================================================================
+render('errors/status', [
+    'code' => 404, 
+    'title' => 'Ops, essa doçura sumiu', 
+    'message' => 'A página ou doce que você procura não foi encontrado em nossa vitrine.'
+], 404);

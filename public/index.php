@@ -84,6 +84,20 @@ if ($isGet && $path === '/site.webmanifest') {
 }
 
 // ============================================================================
+// ASSET LOCAL DO GOOGLE TAG MANAGER (FIRST-PARTY / ELIMINAÇÃO DE ERROS DE DNS)
+// ============================================================================
+if ($isGet && $path === '/gtm.js') {
+    header('Content-Type: application/javascript; charset=utf-8');
+    header('Cache-Control: public, max-age=86400, immutable');
+    if (is_file(__DIR__ . '/gtm.js')) {
+        readfile(__DIR__ . '/gtm.js');
+    } else {
+        echo "(function(){window.dataLayer=window.dataLayer||[];window.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});})();";
+    }
+    exit;
+}
+
+// ============================================================================
 // 1. LIMITES DE TAMANHO DE PAYLOAD (PROTEÇÃO CONTRA DOS)
 // ============================================================================
 if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 2_000_000) {

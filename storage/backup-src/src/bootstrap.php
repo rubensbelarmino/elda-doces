@@ -105,7 +105,7 @@ header('Cross-Origin-Resource-Policy: same-origin');
 header('Cross-Origin-Embedder-Policy: require-corp');
 header('Origin-Agent-Cluster: ?1');
 header('X-Permitted-Cross-Domain-Policies: none');
-header('Cache-Control: no-store, private, max-age=0');
+header('Cache-Control: no-store, no-transform, private, max-age=0');
 header('Pragma: no-cache');
 
 $appNode = getenv('APP_NODE') ?: 'php-' . ($_SERVER['SERVER_PORT'] ?? 'cli');

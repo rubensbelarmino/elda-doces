@@ -428,8 +428,10 @@ if ($method === 'POST' && $path === '/entrar') {
     $target = (string) ($_SESSION['intended'] ?? ($user['role'] === 'admin' ? '/admin' : '/minha-conta'));
     session_regenerate_id(true);
 
+    $remember = !empty($_POST['remember']);
+
     try {
-        begin_two_factor($user, $target);
+        begin_two_factor($user, $target, 0, 'login', $remember);
     } catch (Throwable $exception) {
         error_log('Falha ao enviar código 2FA: ' . $exception->getMessage());
         flash('error', 'Não conseguimos enviar o código agora. Tente novamente em instantes.');
@@ -533,6 +535,16 @@ if ($method === 'POST' && $path === '/verificar-codigo') {
     session_regenerate_id(true);
     $_SESSION['user_id'] = (string) $user['id'];
     $_SESSION['csrf'] = bin2hex(random_bytes(32));
+
+    $remember = !empty($pending['remember']);
+    if ($remember) {
+        $_SESSION['remember_me'] = true;
+        set_session_cookie_lifetime(14 * 86400);
+    } else {
+        unset($_SESSION['remember_me']);
+        set_session_cookie_lifetime(0);
+    }
+
     unset($_SESSION['two_factor'], $_SESSION['intended'], $_SESSION['login_attempts']);
 
     flash('success', 'Identidade confirmada com sucesso. Bem-vindo(a), ' . explode(' ', $user['name'])[0] . '!');
@@ -563,7 +575,7 @@ if ($method === 'POST' && $path === '/verificar-codigo/reenviar') {
     }
 
     try {
-        begin_two_factor($user, (string) $pending['target'], (int) $pending['resend_count'] + 1, (string) ($pending['purpose'] ?? 'login'));
+        begin_two_factor($user, (string) $pending['target'], (int) $pending['resend_count'] + 1, (string) ($pending['purpose'] ?? 'login'), !empty($pending['remember']));
         flash('success', 'Enviamos um novo código para seu e-mail.');
     } catch (Throwable $exception) {
         error_log('Falha ao reenviar 2FA: ' . $exception->getMessage());
@@ -746,8 +758,9 @@ if ($method === 'POST' && $path === '/criar-conta') {
 // ============================================================================
 if ($method === 'POST' && $path === '/sair') {
     verify_csrf('/');
-    unset($_SESSION['user_id'], $_SESSION['two_factor']);
+    unset($_SESSION['user_id'], $_SESSION['two_factor'], $_SESSION['remember_me']);
     session_regenerate_id(true);
+    set_session_cookie_lifetime(0);
     flash('info', 'Você saiu da sua conta com segurança. Até breve!');
     redirect('/');
 }

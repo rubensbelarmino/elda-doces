@@ -72,6 +72,7 @@ ini_set('session.use_only_cookies', '1');
 ini_set('session.cookie_httponly', '1');
 ini_set('session.sid_length', '48');
 ini_set('session.sid_bits_per_character', '6');
+ini_set('session.gc_maxlifetime', '1209600'); // 14 dias para suportar opção de manter conectado
 session_save_path($sessionDirectory);
 session_name('doceatelier_session');
 
@@ -87,6 +88,30 @@ session_set_cookie_params([
     'samesite' => 'Lax',
 ]);
 session_start();
+
+/**
+ * Define ou renova o tempo de vida do cookie de sessão (ex: 14 dias ou temporário por sessão).
+ */
+function set_session_cookie_lifetime(int $lifetime): void
+{
+    global $isHttps;
+    setcookie(
+        session_name(),
+        session_id(),
+        [
+            'expires' => $lifetime > 0 ? time() + $lifetime : 0,
+            'path' => '/',
+            'secure' => $isHttps,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]
+    );
+}
+
+// Se o usuário marcou para ficar logado por 14 dias, renova o cookie a cada requisição autenticada
+if (!empty($_SESSION['remember_me']) && !empty($_SESSION['user_id'])) {
+    set_session_cookie_lifetime(14 * 86400);
+}
 
 // ============================================================================
 // 3. CABEÇALHOS DE SEGURANÇA REFORÇADOS & CONTENT SECURITY POLICY (CSP)
@@ -343,7 +368,39 @@ function cart_details(): array
 }
 
 /**
- * Motor de renderização: carrega a view com os dados e empacota no layout principal.
+ * Minifica o HTML resultante removendo quebras de linha, espaços desnecessários
+ * e comentários, consolidando todo o código-fonte em uma única linha contínua.
+ */
+function minify_html(string $html): string
+{
+    $placeholders = [];
+    $html = preg_replace_callback('/<(pre|textarea)\b[^>]*>.*?<\/\1>/is', function ($matches) use (&$placeholders) {
+        $key = '<!--###PRESERVE_' . count($placeholders) . '###-->';
+        $placeholders[$key] = $matches[0];
+        return $key;
+    }, $html);
+
+    // Remove comentários HTML comuns (preserva condicionais se existirem)
+    $html = preg_replace('/<!--(?!\s*\[if)[^\[>].*?-->/s', '', $html);
+
+    // Substitui quebras de linha e sequências de whitespace por um único espaço
+    $html = preg_replace('/\s+/', ' ', $html);
+
+    // Remove espaços supérfluos entre tags estruturais e de bloco
+    $blockTags = 'html|head|body|meta|link|title|header|footer|nav|main|section|div|ul|ol|li|table|thead|tbody|tr|td|th|form';
+    $html = preg_replace('/\s+(<\/?(?:' . $blockTags . ')\b[^>]*>)/i', '$1', $html);
+    $html = preg_replace('/(<\/?(?:' . $blockTags . ')\b[^>]*>)\s+/i', '$1', $html);
+
+    if (!empty($placeholders)) {
+        $html = strtr($html, $placeholders);
+    }
+
+    return trim($html);
+}
+
+/**
+ * Motor de renderização: carrega a view com os dados, empacota no layout principal
+ * e entrega o HTML de saída minificado em uma única linha contínua.
  */
 function render(string $view, array $data = [], int $status = 200): void
 {
@@ -353,7 +410,10 @@ function render(string $view, array $data = [], int $status = 200): void
     ob_start();
     require dirname(__DIR__) . '/views/' . $view . '.php';
     $content = (string) ob_get_clean();
+    ob_start();
     require dirname(__DIR__) . '/views/layout.php';
+    $html = (string) ob_get_clean();
+    echo minify_html($html);
 }
 
 /**
@@ -444,7 +504,7 @@ function masked_email(string $email): string
 /**
  * Inicia o fluxo de verificação em duas etapas (2FA) via e-mail com HMAC-SHA256.
  */
-function begin_two_factor(array $identity, string $target, int $resendCount = 0, string $purpose = 'login'): void
+function begin_two_factor(array $identity, string $target, int $resendCount = 0, string $purpose = 'login', bool $remember = false): void
 {
     global $mailer, $appKey;
     $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -468,6 +528,7 @@ function begin_two_factor(array $identity, string $target, int $resendCount = 0,
         'sent_at' => time(),
         'resend_count' => $resendCount,
         'target' => safe_redirect_target($target, ($identity['role'] ?? 'customer') === 'admin' ? '/admin' : '/minha-conta'),
+        'remember' => $remember,
     ];
 }
 

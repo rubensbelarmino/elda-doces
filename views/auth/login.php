@@ -57,6 +57,18 @@
                     </div>
                 </label>
 
+                <div class="remember-login-wrapper" style="margin: 14px 0 18px 0; display: flex; align-items: center;">
+                    <label class="remember-login-label" for="remember" style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; font-size: 13px; color: #3d2314; font-weight: 500; margin: 0; text-transform: none; letter-spacing: normal;">
+                        <input type="checkbox"
+                               class="remember-login-checkbox"
+                               name="remember"
+                               id="remember"
+                               value="1"
+                               style="width: 18px; height: 18px; min-width: 18px; min-height: 18px; accent-color: #6f1d3b; cursor: pointer; margin: 0;">
+                        <span class="remember-login-text">Ficar logado por 14 dias</span>
+                    </label>
+                </div>
+
                 <button class="button button-primary button-block" type="submit">
                     Entrar <span aria-hidden="true">→</span>
                 </button>

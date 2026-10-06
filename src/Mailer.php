@@ -27,33 +27,43 @@ declare(strict_types=1);
 final class Mailer
 {
     /**
+    private readonly string $replyToEmail;
+
+    /**
      * @param string $transport Mecanismo de entrega: 'smtp', 'mail' ou 'log'
      * @param string $fromEmail E-mail remetente
      * @param string $fromName Nome amigável do remetente
      * @param string $logDirectory Diretório para armazenamento de logs em desenvolvimento
+     * @param string|null $replyToEmail E-mail de resposta (suporte/atendimento)
      */
     public function __construct(
         private readonly string $transport,
         private readonly string $fromEmail,
         private readonly string $fromName,
         private readonly string $logDirectory,
-    ) {}
+        ?string $replyToEmail = null,
+    ) {
+        $this->replyToEmail = $replyToEmail && filter_var($replyToEmail, FILTER_VALIDATE_EMAIL) ? $replyToEmail : $fromEmail;
+    }
 
     /**
      * Fábrica estática que inicializa o Mailer a partir das variáveis de ambiente (.env).
      */
     public static function fromEnvironment(string $storagePath): self
     {
-        $fromEmail = trim(getenv('MAIL_FROM') ?: 'seguranca@doceatelier.local');
+        $fromEmail = trim(getenv('MAIL_FROM') ?: 'admin@elda-doces.com');
         if (!filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
             throw new RuntimeException('MAIL_FROM inválido.');
         }
+
+        $replyTo = trim(getenv('MAIL_REPLY_TO') ?: 'suporte@elda-doces.com');
 
         return new self(
             strtolower(getenv('MAIL_TRANSPORT') ?: 'log'),
             $fromEmail,
             getenv('MAIL_FROM_NAME') ?: 'Elda Bolos e Doces',
             $storagePath . '/mail',
+            filter_var($replyTo, FILTER_VALIDATE_EMAIL) ? $replyTo : $fromEmail,
         );
     }
 
@@ -233,6 +243,7 @@ HTML;
             'MIME-Version: 1.0',
             'Content-Type: text/html; charset=UTF-8',
             'From: ' . $this->headerValue($this->fromName) . ' <' . $this->fromEmail . '>',
+            'Reply-To: <' . $this->replyToEmail . '>',
             'X-Mailer: EldaBolos-PHP',
         ];
         if (!mail($to, $subject, $html, implode("\r\n", $headers))) {
@@ -298,7 +309,7 @@ HTML;
             $this->command($socket, 'DATA', [354]);
 
             $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-            $message = "From: {$this->headerValue($this->fromName)} <{$this->fromEmail}>\r\nTo: <{$to}>\r\nSubject: {$encodedSubject}\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n{$html}";
+            $message = "From: {$this->headerValue($this->fromName)} <{$this->fromEmail}>\r\nTo: <{$to}>\r\nReply-To: <{$this->replyToEmail}>\r\nSubject: {$encodedSubject}\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n{$html}";
             $message = preg_replace('/(?m)^\./', '..', $message) ?? $message;
 
             fwrite($socket, $message . "\r\n.\r\n");

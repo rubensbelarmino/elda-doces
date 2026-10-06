@@ -88,7 +88,6 @@ $ogImage = isset($metaImage) ? $metaImage : request_base_url() . versioned_asset
     <script async defer nonce="<?= e($nonce) ?>">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.defer=true;j.setAttribute('async','');j.setAttribute('defer','');
-    // https://www.googletagmanager.com/gtm.js
     j.src='/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','<?= e($gtmId) ?>');</script>
     <!-- End Google Tag Manager -->
@@ -253,6 +252,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <img src="<?= versioned_asset('images/whatsapp-icon.svg') ?>" alt="Ícone do WhatsApp" role="presentation" aria-hidden="true" width="18" height="18">
                 <span>WhatsApp: (15) 99745-1766</span>
             </a>
+            <a href="mailto:suporte@elda-doces.com">E-mail: suporte@elda-doces.com</a>
             <a href="https://www.instagram.com/eldabolosedoces" target="_blank" rel="noopener noreferrer">Instagram: @eldabolosedoces</a>
             <span>Seg–Sáb • 9h às 19h</span>
         </div>

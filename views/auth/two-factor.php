@@ -1,7 +1,7 @@
-<!-- [comentado temporariamente para versionamento] <section class="auth-page two-factor-page" aria-label="Verificação de segurança em duas etapas"> -->
+<section class="auth-page two-factor-page" aria-label="Verificação de segurança em duas etapas">
 
-    <!-- [comentado temporariamente para versionamento] <div class="auth-art two-factor-art"> -->
-        <!-- [comentado temporariamente para versionamento] <div> -->
+    <div class="auth-art two-factor-art">
+        <div>
             <p class="overline">Segurança em duas etapas</p>
             <h1>Seu acesso,<br><em>bem protegido.</em></h1>
             <p>Uma camada extra de cuidado artesanal para proteger seus pedidos e dados pessoais.</p>

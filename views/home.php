@@ -1,13 +1,13 @@
-<!-- [comentado temporariamente para versionamento] <section class="hero" aria-label="Apresentação da confeitaria"> -->
+<section class="hero" aria-label="Apresentação da confeitaria">
 
-    <!-- [comentado temporariamente para versionamento] <img class="hero-bg" -->
+    <img class="hero-bg"
          src="<?= asset('images/hero-doces.webp') ?>"
          alt="Vitrine com variedade de bolos artesanais, tortas e doces da Elda"
          width="1672"
          height="941"
          fetchpriority="high">
 
-    <!-- [comentado temporariamente para versionamento] <div class="container hero-content"> -->
+    <div class="container hero-content">
 
         <p class="overline">Elda Bolos e Doces • Sorocaba</p>
 

@@ -18,11 +18,11 @@ $paymentLabels = [
 
 $admin = current_user();
 ?>
-<section class="admin-shell" aria-label="Gerenciamento operacional de pedidos">
+<!-- [comentado temporariamente para versionamento] <section class="admin-shell" aria-label="Gerenciamento operacional de pedidos"> -->
 
-    <aside class="admin-sidebar">
+    <!-- [comentado temporariamente para versionamento] <aside class="admin-sidebar"> -->
 
-        <nav aria-label="Menu administrativo">
+        <!-- [comentado temporariamente para versionamento] <nav aria-label="Menu administrativo"> -->
             <a href="/admin"><span>⌂</span> Visão geral</a>
             <a class="active" href="/admin/pedidos"><span>◇</span> Pedidos</a>
             <a href="/admin#produtos"><span>□</span> Produtos</a>

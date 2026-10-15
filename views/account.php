@@ -17,9 +17,9 @@ $paymentLabels = [
 ];
 ?>
 
-<!-- [comentado temporariamente para versionamento] <section class="account-header" aria-label="Cabeçalho da conta do cliente"> -->
-    <!-- [comentado temporariamente para versionamento] <div class="container"> -->
-        <!-- [comentado temporariamente para versionamento] <div> -->
+<section class="account-header" aria-label="Cabeçalho da conta do cliente">
+    <div class="container">
+        <div>
             <p class="overline">Área exclusiva do cliente</p>
             <h1>Olá, <?= e(explode(' ', $user['name'])[0]) ?>.</h1>
             <p>Seus pedidos e momentos especiais, todos reunidos aqui.</p>

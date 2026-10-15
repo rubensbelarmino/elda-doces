@@ -1,7 +1,7 @@
-<!-- [comentado temporariamente para versionamento] <section class="auth-page" aria-label="Recuperação de acesso"> -->
+<section class="auth-page" aria-label="Recuperação de acesso">
 
-    <!-- [comentado temporariamente para versionamento] <div class="auth-art"> -->
-        <!-- [comentado temporariamente para versionamento] <div> -->
+    <div class="auth-art">
+        <div>
             <p class="overline">Recuperação de acesso</p>
             <h1>Esqueceu sua<br><em>senha?</em></h1>
             <p>Não se preocupe! Informe seu e-mail cadastrado e enviaremos um código aleatório com caracteres do teclado para você criar uma nova senha.</p>

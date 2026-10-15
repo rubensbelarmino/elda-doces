@@ -9,11 +9,11 @@ $statusLabels = [
 ];
 ?>
 
-<section class="admin-shell" aria-label="Painel de controle administrativo">
+<!-- [comentado temporariamente para versionamento] <section class="admin-shell" aria-label="Painel de controle administrativo"> -->
 
-    <aside class="admin-sidebar">
+    <!-- [comentado temporariamente para versionamento] <aside class="admin-sidebar"> -->
 
-        <nav aria-label="Navegação administrativa">
+        <!-- [comentado temporariamente para versionamento] <nav aria-label="Navegação administrativa"> -->
             <a class="active" href="/admin"><span>⌂</span> Visão geral</a>
             <a href="/admin/pedidos"><span>◇</span> Pedidos</a>
             <a href="#produtos"><span>□</span> Produtos</a>

@@ -1,7 +1,7 @@
-<!-- [comentado temporariamente para versionamento] <section class="auth-page" aria-label="Criação de nova conta"> -->
+<section class="auth-page" aria-label="Criação de nova conta">
 
-    <!-- [comentado temporariamente para versionamento] <div class="auth-art register-art"> -->
-        <!-- [comentado temporariamente para versionamento] <div> -->
+    <div class="auth-art register-art">
+        <div>
             <p class="overline">Uma conta só sua</p>
             <h1>Mais perto<br>dos seus <em>favoritos.</em></h1>
             <p>Salve seus endereços de entrega e acompanhe todas as suas encomendas em Sorocaba.</p>

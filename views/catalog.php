@@ -1,6 +1,6 @@
-<!-- [comentado temporariamente para versionamento] <section class="page-hero compact" aria-label="Apresentação do cardápio"> -->
-    <!-- [comentado temporariamente para versionamento] <div class="container"> -->
-        <!-- [comentado temporariamente para versionamento] <p class="overline">Feito artesanalmente para você</p> -->
+<section class="page-hero compact" aria-label="Apresentação do cardápio">
+    <div class="container">
+        <p class="overline">Feito artesanalmente para você</p>
 
         <h1>Nosso <em>cardápio</em></h1>
         <p>Escolha seu novo doce artesanal favorito em Sorocaba. Nós cuidamos do resto.</p>

@@ -5,7 +5,7 @@ $productImageUrl = request_base_url() . '/assets/images/' . rawurlencode((string
 $inStock = (int) $product['stock'] > 0;
 ?>
 
-<script type="application/ld+json">
+<!-- [comentado temporariamente para versionamento] <script type="application/ld+json"> -->
 {
   "@context": "https://schema.org",
   "@graph": [
@@ -60,10 +60,10 @@ $inStock = (int) $product['stock'] > 0;
     }
   ]
 }
-</script>
+<!-- [comentado temporariamente para versionamento] </script> -->
 
 <section class="section product-detail" aria-label="Detalhes do produto <?= e($product['name']) ?>">
-    <div class="container">
+    <!-- [comentado temporariamente para versionamento] <div class="container"> -->
 
         <nav class="breadcrumbs" aria-label="Navegação estrutural">
             <a href="/">Início</a>

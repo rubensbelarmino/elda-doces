@@ -1,6 +1,6 @@
-<!-- [comentado temporariamente para versionamento] <section class="page-hero mini" aria-label="Cabeçalho da sacola de compras"> -->
-    <!-- [comentado temporariamente para versionamento] <div class="container"> -->
-        <!-- [comentado temporariamente para versionamento] <p class="overline">Seu momento doce</p> -->
+<section class="page-hero mini" aria-label="Cabeçalho da sacola de compras">
+    <div class="container">
+        <p class="overline">Seu momento doce</p>
         <h1>Sua <em>sacola</em></h1>
     </div>
 </section>

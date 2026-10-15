@@ -1,7 +1,7 @@
-<!-- [comentado temporariamente para versionamento] <section class="auth-page" aria-label="Acesso à conta do cliente"> -->
+<section class="auth-page" aria-label="Acesso à conta do cliente">
 
-    <!-- [comentado temporariamente para versionamento] <div class="auth-art"> -->
-        <!-- [comentado temporariamente para versionamento] <div> -->
+    <div class="auth-art">
+        <div>
             <p class="overline">Seu cantinho doce</p>
             <h1>Bom ter você<br><em>de volta.</em></h1>
             <p>Acesse seus pedidos anteriores e acompanhe cada etapa do preparo da sua encomenda.</p>

@@ -8,9 +8,9 @@
  * ============================================================================
  */
 ?>
-<!-- [comentado temporariamente para versionamento] <section class="page-hero mini" aria-label="Finalização do pedido"> -->
-    <!-- [comentado temporariamente para versionamento] <div class="container"> -->
-        <!-- [comentado temporariamente para versionamento] <p class="overline">Último detalhe antes do preparo</p> -->
+<section class="page-hero mini" aria-label="Finalização do pedido">
+    <div class="container">
+        <p class="overline">Último detalhe antes do preparo</p>
         <h1>Finalizar <em>pedido</em></h1>
     </div>
 </section>

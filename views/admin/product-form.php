@@ -1,6 +1,6 @@
-<section class="admin-form-page" aria-label="Edição de produto">
-    <div class="container narrow">
-        <a class="back-link" href="/admin">← Voltar ao painel administrativo</a>
+<!-- [comentado temporariamente para versionamento] <section class="admin-form-page" aria-label="Edição de produto"> -->
+    <!-- [comentado temporariamente para versionamento] <div class="container narrow"> -->
+        <!-- [comentado temporariamente para versionamento] <a class="back-link" href="/admin">← Voltar ao painel administrativo</a> -->
 
         <div class="admin-form-card">
             <div>

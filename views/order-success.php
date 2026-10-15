@@ -10,12 +10,12 @@ $paymentLabels = [
 ];
 ?>
 
-<!-- [comentado temporariamente para versionamento] <section class="success-page" aria-label="Confirmação e pagamento do pedido"> -->
+<section class="success-page" aria-label="Confirmação e pagamento do pedido">
     <div class="success-card pix-success" data-order-number="<?= e($order['number']) ?>" data-status="<?= e($paymentStatus) ?>">
 
-        <!-- [comentado temporariamente para versionamento] <div class="success-mark" aria-hidden="true"> -->
+        <div class="success-mark" aria-hidden="true">
             <?= $paymentStatus === 'approved' ? '✓' : '◇' ?>
-        <!-- [comentado temporariamente para versionamento] </div> -->
+        </div>
 
         <p class="overline"><?= e($paymentLabels[$paymentStatus] ?? 'Pagamento pendente') ?></p>
 

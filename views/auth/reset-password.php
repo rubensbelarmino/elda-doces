@@ -1,7 +1,7 @@
-<!-- [comentado temporariamente para versionamento] <section class="auth-page" aria-label="Redefinição de senha"> -->
+<section class="auth-page" aria-label="Redefinição de senha">
 
-    <!-- [comentado temporariamente para versionamento] <div class="auth-art"> -->
-        <!-- [comentado temporariamente para versionamento] <div> -->
+    <div class="auth-art">
+        <div>
             <p class="overline">Nova credencial</p>
             <h1>Crie sua nova<br><em>senha segura.</em></h1>
             <p>Informe o código aleatório que enviamos para o seu e-mail e defina uma nova senha para acessar sua conta.</p>

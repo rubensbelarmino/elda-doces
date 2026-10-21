@@ -34,6 +34,7 @@ services:
     volumes:
       - php_sessions:/var/www/html/storage/sessions
       - php_runtime:/var/www/html/storage/runtime
+      - product_images:/var/www/html/public/assets/images
     depends_on:
       db:
         condition: service_healthy
@@ -64,6 +65,12 @@ services:
     volumes:
       - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./public:/var/www/html/public:ro
+      - type: volume
+        source: product_images
+        target: /var/www/html/public/assets/images
+        read_only: true
+        volume:
+          nocopy: true
     depends_on:
       - app1
       - app2
@@ -79,3 +86,4 @@ volumes:
   mysql_data:
   php_sessions:
   php_runtime:
+  product_images:

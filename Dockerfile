@@ -5,7 +5,7 @@ RUN docker-php-ext-install -j"$(nproc)" pdo_mysql opcache
 COPY docker/php.ini /usr/local/etc/php/conf.d/99-doce.ini
 WORKDIR /var/www/html
 COPY . .
-RUN chown -R www-data:www-data /var/www/html/storage
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/public/assets/images
 
 USER www-data
 EXPOSE 9000

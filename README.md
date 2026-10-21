@@ -1,781 +1,295 @@
-# 🎂 Elda Bolos e Doces — Documentação Técnica Completa do Sistema
+# Elda Bolos e Doces
 
-> **Guia Arquitetural e Operacional Definitivo**  
-> E-commerce responsivo e transacional para a confeitaria artesanal **Elda Bolos e Doces** (Sorocaba/SP).  
-> Desenvolvido com foco em **HTML5 Semântico**, **CSS3 Nativo com Design System** e **JavaScript ES6+ Vanilla Puro** (Zero dependências no frontend).
+Aplicação PHP para catálogo, carrinho, autenticação por senha e código por e-mail, checkout PIX via Mercado Pago e administração de produtos e pedidos. O conteúdo apresenta uma confeitaria de Sorocaba/SP. WhatsApp, iFood e Instagram são links externos, não integrações de catálogo ou pedidos.
 
----
-## 📜 License(LICENSE)
-[![MIT License](https://img.shields.io/badge/License-MIT-red.svg)](https://github.com/rubensbelarmino/elda-doces/blob/main/LICENSE)
----
-## 📑 Índice Geral
+Este documento descreve o código do repositório, não certifica disponibilidade do site, desempenho, acessibilidade ou prontidão para produção. Licença: [MIT](LICENSE). Detalhes de metadados e rastreamento: [Documentação de SEO](DOCUMENTACAO_SEO_PROJETO.md).
 
-1. [Visão Geral e Identidade do Projeto](#-visão-geral-e-identidade-do-projeto)
-2. [Arquitetura Tecnológica e Linguagens](#-arquitetura-tecnológica-e-linguagens)
-3. [Foco Principal 1: HTML5 e Estrutura Semântica](#-foco-principal-1-html5-e-estrutura-semântica)
-   - [Padrões de Acessibilidade (WCAG 2.1 AA & ARIA)](#padrões-de-acessibilidade-wcag-21-aa--aria)
-   - [SEO e Dados Estruturados (Schema.org JSON-LD)](#seo-e-dados-estruturados-schemaorg-json-ld)
-   - [Inventário Completo de Páginas e Componentes](#inventário-completo-de-páginas-e-componentes)
-4. [Foco Principal 2: CSS3 e Arquitetura Visual (app.css)](#-foco-principal-2-css3-e-arquitetura-visual-appcss)
-   - [Design Tokens (CSS Custom Properties)](#design-tokens-css-custom-properties)
-   - [Tipografia e Escala Editorial](#tipografia-e-escala-editorial)
-   - [Barra de Rolagem Personalizada (Candy Twist)](#barra-de-rolagem-personalizada-candy-twist)
-   - [Componentes de UI Estilizados](#componentes-de-ui-estilizados)
-   - [Animações e Efeitos Visuais (Keyframes)](#animações-e-efeitos-visuais-keyframes)
-   - [Responsividade e Breakpoints do Layout](#responsividade-e-breakpoints-do-layout)
-   - [Políticas de Redução de Movimento e Contraste](#políticas-de-redução-de-movimento-e-contraste)
-5. [Foco Principal 3: JavaScript ES6+ Vanilla (app.js)](#-foco-principal-3-javascript-es6-vanilla-appjs)
-   - [Filosofia Zero-Dependency & Padrão IIFE](#filosofia-zero-dependency--padrão-iife)
-   - [Pré-carregamento Preditivo de Rotas (Prefetching)](#pré-carregamento-preditivo-de-rotas-prefetching)
-   - [Menu Mobile com Gestão de Foco](#menu-mobile-com-gestão-de-foco)
-   - [Lazy Loading de Imagens Base64 + Cache de Sessão](#lazy-loading-de-imagens-base64--cache-de-sessão)
-   - [Máscaras Reativas de Entrada (Telefone, CEP, CPF)](#máscaras-reativas-de-entrada-telefone-cep-cpf)
-   - [Cópia Inteligente do Código PIX (Clipboard API)](#cópia-inteligente-do-código-pix-clipboard-api)
-   - [Avanço Automático no Input 2FA](#avanço-automático-no-input-2fa)
-   - [Cronômetro Regressivo de Expiração](#cronômetro-regressivo-de-expiração)
-   - [Sistema de Notificações Toast Temporizadas](#sistema-de-notificações-toast-temporizadas)
-   - [Auto-Submit de Formulários Administrativos](#auto-submit-de-formulários-administrativos)
-6. [Backend, Segurança e Armazenamento de Dados](#-backend-segurança-e-armazenamento-de-dados)
-   - [PHP 8.4 Nativo e Front Controller](#php-84-nativo-e-front-controller)
-   - [Persistência Híbrida: JsonStore vs. MysqlStore](#persistência-híbrida-jsonstore-vs-mysqlstore)
-   - [Autenticação em Duas Etapas (2FA) e Mailer](#autenticação-em-duas-etapas-2fa-e-mailer)
-   - [Checkout PIX e Webhooks Mercado Pago](#checkout-pix-e-webhooks-mercado-pago)
-   - [Medidas de Segurança (CSRF, Rate Limiting, CSP, Bcrypt)](#medidas-de-segurança-csrf-rate-limiting-csp-bcrypt)
-7. [Mapa Completo do Repositório (Árvore de Arquivos)](#-mapa-completo-do-repositório-árvore-de-arquivos)
-8. [Como Executar o Projeto Localmente e em Produção](#-como-executar-o-projeto-localmente-e-em-produção)
+## Arquitetura
 
----
+O ponto de entrada é `public\index.php`: um **front controller procedural**, com roteamento e tratamento das requisições no próprio arquivo. `src\bootstrap.php` carrega classes explicitamente, lê configuração, inicia sessão e expõe funções globais. Os templates PHP em `views\` são renderizados com `views\layout.php`. Não há framework MVC, namespace `App` nem autoloader Composer.
 
-## 🍰 Visão Geral e Identidade do Projeto
-
-O site da **Elda Bolos e Doces** é uma solução completa de e-commerce gastronômico artesanal. O projeto foi projetado para traduzir a experiência acolhedora de uma confeitaria de alta linha para a web, com foco absoluto em velocidade de carregamento, clareza tipográfica, apelo visual dos produtos e segurança nas transações via PIX.
-
-### Detalhes do Negócio
-- **Marca**: Elda Bolos e Doces (Atelier de Confeitaria Artesanal)
-- **Localização**: Av. Dr. Afonso Vergueiro, 2548, Vila Augusta, Sorocaba/SP
-- **Tradição**: Desde 2009 atendendo a região de Sorocaba
-- **Avaliação Google Maps**: **4,4 Estrelas** com mais de **1.300 avaliações** reais verificadas
-- **Canais Integrados**: Loja Web própria, WhatsApp comercial, iFood e Instagram (`@eldabolosedoces`)
-
-```mermaid
-graph TD
-    Client["Navegador do Cliente (Desktop / Mobile)"]
-    Web["Servidor Web (Nginx / PHP-S)"]
-    Router["Front Controller (public/index.php)"]
-    Views["Sistema de Views (HTML5 + Layout)"]
-    CSS["Design System (app.css)"]
-    JS["Scripts Vanilla (app.js)"]
-    Store["Persistência (JsonStore / MysqlStore)"]
-    MP["Mercado Pago API (PIX)"]
-    Mail["Serviço de Mailer (SMTP / Log)"]
-
-    Client -->|Requisição HTTP| Web
-    Web -->|Roteamento| Router
-    Router -->|Renderiza| Views
-    Views -->|Aplica| CSS
-    Views -->|Executa| JS
-    Router -->|Consulta / Grava| Store
-    Router -->|Gera Cobrança PIX| MP
-    Router -->|Dispara Código 2FA| Mail
+```text
+Navegador → servidor web → public\index.php → src\bootstrap.php
+                                ├─ views\ + layout + assets
+                                ├─ Store → JsonStore OU MysqlStore
+                                ├─ Mailer → log / SMTP / mail()
+                                └─ MercadoPagoGateway → API PIX
 ```
 
----
+`Store` é uma **interface**, implementada por `JsonStore` e `MysqlStore` no mesmo arquivo `src\Store.php`:
 
-## 💻 Arquitetura Tecnológica e Linguagens
+- Sem `DB_DSN`: JSON em `storage\data.json`, com bloqueios de arquivo para as operações de persistência.
+- Com `DB_DSN`: PDO/MySQL, com SQL real nas tabelas `products`, `users`, `orders` e `order_items`, definidas em `database\schema-v2.sql`. A inicialização executa migração e seed. Falhas de inicialização retornam 503; não há fallback silencioso para JSON.
+- O seed inclui oito produtos e contas de administrador e cliente com senhas fixas no código. **Remova ou substitua essas contas/credenciais antes de expor o serviço.** Elas não são segredos adequados para produção.
 
-| Camada | Tecnologia | Descrição e Finalidade |
-| :--- | :--- | :--- |
-| **Estrutura** | **HTML5 Semântico** | Marcação nativa, rica em acessibilidade ARIA, metadados OpenGraph e microdados Schema.org. |
-| **Estilização** | **CSS3 Nativo** | Vanilla CSS puro com Custom Properties (Tokens), Flexbox, CSS Grid, Shimmer loaders e Media Queries responsivas. Zero Tailwind ou frameworks pesados. |
-| **Interatividade** | **JavaScript ES6+** | Vanilla JS puro encapsulado em IIFE. Pre-fetching inteligente de páginas, cache em `sessionStorage`, máscaras e IntersectionObserver. |
-| **Backend** | **PHP 8.4 / 8.3** | Código estrito (`declare(strict_types=1);`), orientado a objetos, padrão MVC enxuto com Front Controller unificado. |
-| **Armazenamento** | **JsonStore & MySQL 8.4** | Modo padrão em JSON local com `flock` atômico; comutável por `.env` para MySQL relacional com transações ACID. |
-| **Pagamentos** | **Mercado Pago API v1** | Geração instantânea de QR Code PIX, string Copia-e-Cola e recepção de Webhooks com validação criptográfica de assinatura. |
-| **E-mails & 2FA** | **Mailer Nativo** | Envio de códigos de segurança de 6 dígitos via SMTP autenticado (Gmail/Mailpit) ou fallback para logs locais. |
-| **Web Server** | **Nginx / PHP-FPM / CLI** | Configuração para produção com balanceamento `least_conn` de 2 nós PHP, buffers otimizados e gzip. |
+### Dados persistentes
 
----
+| Local | Conteúdo |
+| --- | --- |
+| `storage\data.json` ou MySQL | Produtos, usuários e pedidos, conforme o adaptador escolhido |
+| `storage\sessions\` | Identidade autenticada, carrinho e desafio 2FA; não há tabela de códigos 2FA |
+| `storage\runtime\rate-limits.json` | Estado do limitador por IP, inclusive com MySQL |
+| `storage\runtime\password-resets.json` | Recuperação de senha, inclusive com MySQL |
+| `storage\mail\` | E-mails HTML e referência ao último e-mail; contém material sensível |
+| `storage\app.key` | Chave gerada quando `APP_KEY` está ausente/vazia |
+| `public\assets\images\` | Imagens embarcadas e uploads administrativos |
 
-## 🧱 Foco Principal 1: HTML5 e Estrutura Semântica
+O endereço salvo fica em `delivery_address` no JSON ou `users.delivery_json` no MySQL. Os dados do cliente de um pedido ficam no próprio pedido, em `orders.customer_json` no MySQL. Faça backup de banco, arquivos persistentes e imagens; usar MySQL não torna todo o estado da aplicação independente do disco.
 
-A arquitetura de marcação prioriza **semântica nativa**, evitando o "div soup" e garantindo que motores de busca e tecnologias assistivas (leitores de tela como NVDA, JAWS e VoiceOver) compreendam a hierarquia lógica de cada página.
+## Estrutura do repositório
 
-### Padrões de Acessibilidade (WCAG 2.1 AA & ARIA)
+A árvore destaca arquivos ativos e distingue os diretórios históricos dos dados gerados em execução.
 
-1. **Skip-Link de Acesso Rápido**:
-   Localizado logo na abertura da tag `<body>`, permite que usuários de navegação por teclado saltem instantaneamente o menu e vão direto ao conteúdo útil:
-   ```html
-   <a class="skip-link" href="#conteudo-principal">Pular para o conteúdo principal</a>
-   ```
-2. **Regiões de Marco (Landmarks)**:
-   - `<header class="site-header">`: Cabeçalho institucional.
-   - `<nav class="main-nav" data-menu aria-label="Navegação principal">`: Menu de páginas.
-   - `<main id="conteudo-principal">`: Ponto de ancoragem do conteúdo dinâmico.
-   - `<section aria-labelledby="...">`: Seções identificadas por seus próprios títulos.
-   - `<article class="product-card">` e `<article class="review-card">`: Entidades autônomas.
-   - `<footer class="site-footer">`: Rodapé com contatos, políticas e links de navegação.
-3. **Gerenciamento de Estado Dinâmico com ARIA**:
-   - `aria-expanded="false"` e `aria-controls="menu-principal"` no botão do menu mobile.
-   - `aria-live="polite"` em contêineres de feedback (`#a11y-status`) para avisos sonoros sem interromper a fala do leitor de tela.
-   - `aria-current="page"` marcando o link da página em que o visitante se encontra.
-4. **Textos Escondidos para Leitores de Tela (`.sr-only`)**:
-   Elementos visuais abstratos (como o ícone da sacola ou o botão "+" de compra rápida) contêm rótulos descritivos ocultos para acessibilidade:
-   ```html
-   <button class="add-button" type="submit">
-       <span class="sr-only">Adicionar Caixa Afeto à sacola</span>
-       <span aria-hidden="true">+</span>
-   </button>
-   ```
-
-### SEO e Dados Estruturados (Schema.org JSON-LD)
-
-No arquivo `views/layout.php`, o cabeçalho injeta um schema canônico de negócio local para indexação rica no Google:
-```html
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Bakery",
-  "name": "Elda Bolos e Doces",
-  "image": "https://elda-doces.com/assets/images/hero-doces.png",
-  "telephone": "+55 15 99745-1766",
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "Av. Dr. Afonso Vergueiro, 2548",
-    "addressLocality": "Sorocaba",
-    "addressRegion": "SP",
-    "postalCode": "18040-000",
-    "addressCountry": "BR"
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.4",
-    "reviewCount": "1300"
-  },
-  "priceRange": "$$"
-}
-</script>
+```text
+elda-doces\
+├─ bin\
+│  ├─ build-css.cjs              # Geração/verificação do CSS minificado
+│  ├─ build-static.php           # Exportação experimental de páginas
+│  └─ latest-2fa.php             # Leitura CLI do último código no log de e-mail
+├─ database\schema-v2.sql
+├─ docker\
+│  ├─ nginx.conf                 # Nginx do Compose, HTTP e balanceamento
+│  ├─ nginx-local.conf           # Configuração local com caminhos fixos
+│  ├─ php.ini
+│  └─ proxy-headers.conf
+├─ public\                      # Única raiz pública
+│  ├─ index.php
+│  ├─ gtm.js
+│  ├─ favicon.ico
+│  ├─ apple-touch-icon.png
+│  ├─ site.webmanifest
+│  └─ assets\
+│     ├─ app.css / app.min.css
+│     ├─ app.js / app.min.js
+│     └─ images\                # Inclui hero-doces.webp e favicon.svg
+├─ src\
+│  ├─ bootstrap.php
+│  ├─ Store.php
+│  ├─ Mailer.php
+│  ├─ MercadoPagoGateway.php
+│  └─ RateLimiter.php
+├─ storage\
+│  ├─ backup-frontend\          # Cópias históricas de CSS/JS/views, não ativas
+│  └─ backup-src\               # Cópias históricas de index.php/src, não ativas
+│                                # Dados/sessões/runtime/mail gerados conforme uso
+├─ views\
+│  ├─ layout.php / home.php / catalog.php / product.php
+│  ├─ cart.php / checkout.php / order-success.php / account.php
+│  ├─ status-index.php
+│  ├─ partials\product-card.php
+│  ├─ auth\                     # login, register, two-factor,
+│  │                            # forgot-password e reset-password (.php)
+│  ├─ admin\                    # dashboard, orders e product-form (.php)
+│  └─ errors\status.php
+├─ tests\                       # Testes isolados; entrada run.php
+├─ imagens\                     # Material de referência, incluindo produtos.txt
+├─ produtos_ifood.txt            # Material de referência, sem importação automática
+├─ .env.example / .gitignore / .dockerignore
+├─ package.json / package-lock.json
+├─ Dockerfile / docker-compose.yml
+├─ router.php
+├─ install.sh / start.sh / stop.sh
+├─ LICENSE
+├─ README.md
+└─ DOCUMENTACAO_SEO_PROJETO.md
 ```
 
----
+`node_modules\` é dependência local de manutenção, não parte do runtime PHP. `dist\` e `netlify.toml` são saídas do exportador, não requisitos para iniciar a loja. Não há pacotes ZIP de publicação/entrega prontos fornecidos pelo projeto.
 
-### Inventário Completo de Páginas e Componentes
+## Execução local com PHP (PowerShell)
 
-```
-views/
-├── layout.php              # Shell Master (Head, Header, Toasts, WhatsApp Float, Footer)
-├── home.php                # Vitrine Principal (Hero, Selos, Destaques, Avaliações, Vitrine)
-├── catalog.php             # Cardápio Completo (Filtros, Busca, Grid de Produtos, Empty State)
-├── product.php             # Página de Detalhe (Breadcrumbs, Foto HD, Porções, Compra)
-├── cart.php                # Carrinho de Compras (Listagem, Incrementador, Resumo, Frete)
-├── checkout.php            # Checkout Seguro (Endereço, Validação, Seleção de PIX)
-├── order-success.php       # Tela de Confirmação (QR Code PIX, Copia-e-Cola, Timer)
-├── account.php             # Área do Cliente (Dados cadastrais, Histórico e Rastreio)
-├── status-index.php        # Catálogo de Diagnóstico e Telas HTTP
-├── partials/
-│   └── product-card.php    # Card Reutilizável de Produto com Preço e Imagem Otimizada
-├── auth/
-│   ├── login.php           # Formulário de Entrada com Split-Screen Editorial
-│   ├── register.php        # Cadastro de Novo Cliente com Validação
-│   └── two-factor.php      # Tela de Código de Segurança 2FA (6 dígitos)
-├── admin/
-│   ├── dashboard.php       # Painel de Métricas (Faturamento, Pedidos, Tabela de Produtos)
-│   ├── orders.php          # Gerenciador Operacional de Pedidos e Alteração de Status
-│   └── product-form.php    # Formulário Administrativo de Criação/Edição de Produtos
-└── errors/
-    └── status.php          # Página de Erro Amigável (400, 401, 403, 404, 429, 500, 503)
+Recomendado: **PHP 8.4**. A sintaxe usada exige pelo menos PHP 8.2; a verificação de PHP 8.0 do `install.sh` é insuficiente. Disponibilize `curl`, `mbstring`, `fileinfo`, `openssl` e PDO; para MySQL, também `pdo_mysql`. O processo PHP precisa escrever em `storage\` e `public\assets\images\`.
+
+Na raiz do repositório:
+
+```powershell
+php --version
+php -m
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-#### 1. Shell Principal (`views/layout.php`)
-- **Barra de Anúncios (`.announcement`)**: Tarja superior de alto contraste informando atendimento e entregas em Sorocaba/SP.
-- **Cabeçalho Fixo com Blur (`.site-header`)**: Efeito de vidro fosco (`backdrop-filter: blur(14px)`), logotipo em curvas tipográficas (`.brand-mark`), navegação e ícones rápidos.
-- **Contador de Sacola (`.bag-link span`)**: Atualização visual da quantidade de itens adicionados ao carrinho.
-- **Pilha de Notificações (`.toast-stack`)**: Área flutuante de mensagens de sucesso ou erro com auto-destruição.
-- **Botão Flutuante do WhatsApp (`.whatsapp-float`)**: Acesso instantâneo ao suporte humano oficial.
+**Edite `.env` antes de iniciar.** O exemplo contém placeholders de domínio, chave, SMTP e pagamento, e não representa uma configuração local pronta. Para uma demonstração sem rede externa:
 
-#### 2. Página Inicial (`views/home.php`)
-- **Hero Editorial**: Título estilizado, subtítulo descritivo, selo oficial de avaliação do Google (**4,4 ★ com +1.300 avaliações**) e botões de chamada primária ("Explorar Cardápio") e secundária ("Pedir no WhatsApp").
-- **Faixa de Promessas (`.promise-strip`)**: Destaque para "Ingredientes Nobres", "Receitas de Família" e "Produção Diária em Sorocaba".
-- **Grid de Produtos Selecionados (`.products-section`)**: 4 destaques da confeitaria com badges de preço e atalhos rápidos de compra.
-- **História e Herança (`.story`)**: Bloco narrativo sobre a fundação em 2009, acompanhado do selo vintage circular `.seal` rotacionado.
-- **Seção Oficial de Avaliações Google (`#avaliacoes`)**: 
-  - Cartão de cabeçalho com o selo do Google e link direto para o Google Meu Negócio.
-  - Grade com 4 depoimentos reais de clientes verificados (Mariana Silva, Carlos Eduardo, Juliana Ribeiro, Renato Almeida).
-  - Botão de incentivo ("Deixe sua avaliação no Google ↗").
-- **Galeria da Vitrine (`.elda-gallery`)**: Grid visual com produtos de chocolate e o logotipo oficial da confeitaria.
-- **Ocasiões Especiais (`.occasion`)**: Cards de decisão ("01 Um carinho sem motivo", "02 Uma data para celebrar", "03 Um presente para encantar").
-- **Localização e Atendimento (`.elda-contact`)**: Endereço na Vila Augusta e botões para WhatsApp, iFood e Instagram.
-
-#### 3. Catálogo / Cardápio (`views/catalog.php`)
-- **Filtros por Pílulas (`.category-pills`)**: Alternância rápida entre *Todos*, *Brigadeiros*, *Tortinhas*, *Macarons* e *Bolos*.
-- **Barra de Pesquisa Instantânea (`.search-field`)**: Campo de texto com ícone SVG integrado.
-- **Grade Responsiva (`.product-grid`)**: Distribuição adaptativa de itens com tratamento para estado vazio (`.empty-state`).
-
-#### 4. Detalhe do Produto (`views/product.php`)
-- **Galeria com Imagem em Alta Definição**: Tag da categoria flutuante, proporção preservada e tratamento visual de erro.
-- **Informações do Doce**: Título, descrição minuciosa, preço à vista, preço comparativo e rendimento em porções.
-- **Notas de Qualidade (`.detail-notes`)**: Blocos informativos com ícones de ingredientes frescos e produção diária.
-- **Formulário de Compra**: Campo numérico de quantidade com limite de estoque e botão de adição à sacola.
-
-#### 5. Carrinho e Checkout (`views/cart.php`, `views/checkout.php`)
-- **Linhas do Carrinho (`.cart-line`)**: Foto do produto, título, porção, seletor de quantidade e link de remoção rápida.
-- **Barra de Progresso do Frete (`.shipping-progress`)**: Elemento `<progress>` nativo estilizado que incentiva o cliente a atingir o frete grátis.
-- **Resumo Fixo (`.order-summary`)**: Exibição de subtotal, frete calculado e valor total com badge de segurança.
-- **Formulário de Checkout em 2 Passos**:
-  - *Passo 1*: Dados do Destinatário (Nome, Telefone, E-mail, CPF, Endereço completo, Bairro, CEP e Complemento).
-  - *Passo 2*: Seleção de Pagamento com a opção PIX em destaque.
-
-#### 6. Sucesso do Pedido e PIX (`views/order-success.php`)
-- **Badge de Confirmação**: Ícone animado de sucesso.
-- **Código do Pedido**: Identificador alfanumérico destacado.
-- **QR Code Dinâmico**: Imagem em alta resolução do QR Code gerado pelo Mercado Pago.
-- **Código Copia-e-Cola**: Campo de texto protegido acompanhado do botão de cópia com feedback instantâneo.
-- **Cronômetro Regressivo**: Tempo limite para liquidação do PIX antes do cancelamento do pedido.
-
-#### 7. Painel Administrativo (`views/admin/`)
-- **Dashboard (`dashboard.php`)**: 4 cartões com métricas em tempo real (Faturamento, Pedidos Pendentes, Clientes Cadastrados, Produtos Ativos) e tabela completa do catálogo com toggles de visibilidade e estoque.
-- **Gestor de Pedidos (`orders.php`)**: Cartões detalhados por pedido contendo dados de entrega, itens selecionados, comprovante PIX e dropdown reativo para alteração imediata de status.
-- **Cadastro/Edição de Produtos (`product-form.php`)**: Formulário com precificação em reais/centavos, slug automático, controle de estoque e seleção de fotos.
-
----
-
-## 🎨 Foco Principal 2: CSS3 e Arquitetura Visual (app.css)
-
-Todo o design do site foi construído do zero em **CSS3 moderno**, utilizando uma arquitetura escalável fundamentada em **Variáveis CSS (Design Tokens)**, respeitando contraste de cores estrito (**WCAG 2.1 AA**) e performance máxima de renderização sem reflows desnecessários.
-
-### Design Tokens (CSS Custom Properties)
-
-Definidos globalmente no seletor `:root` de `public/assets/app.css`:
-
-```css
-:root {
-  /* Paleta Cromática Institucional */
-  --wine:        #8d2949;   /* Tom vinho primário da marca */
-  --wine-deep:   #4f162c;   /* Vinho profundo para cabeçalhos e fundos contrastados */
-  --rose:        #ad3d5c;   /* Rosa vintage para destaques e detalhes */
-  --blush:       #ead1cb;   /* Tom suave para bordas delicadas e acentos */
-  --cream:       #fbf6ef;   /* Fundo principal quente e acolhedor */
-  --paper:       #fffdf9;   /* Fundo branco-pérola dos cartões e formulários */
-  --ink:         #2b201f;   /* Cor primária de texto (alto contraste: 12.8:1) */
-  --muted:       #5e504d;   /* Texto secundário (contraste auditado: 7.1:1) */
-  --gold:        #9e5f18;   /* Ouro nobre para estrelas e selos (contraste: 5.04:1) */
-  --line:        rgba(79, 45, 42, .14); /* Linhas divisórias sutis */
-  --green:       #45694d;   /* Verde botânico para estoque e aprovação */
-  
-  /* Elevação e Efeitos */
-  --shadow:      0 24px 70px rgba(70, 35, 32, .11);
-  
-  /* Pilhas Tipográficas */
-  --serif:       Georgia, 'Times New Roman', serif;
-  --sans:        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
+```dotenv
+APP_URL=http://127.0.0.1:8128
+APP_KEY=
+DB_DSN=
+MAIL_TRANSPORT=log
+MERCADO_PAGO_ACCESS_TOKEN=
+MERCADO_PAGO_WEBHOOK_SECRET=
 ```
 
-### Tipografia e Escala Editorial
+Use uma base descartável. A ausência de `APP_KEY` gera `storage\app.key`; preserve-a para reutilizar esse ambiente. Com os tokens vazios, o catálogo pode ser explorado, mas não se criam nem consultam pagamentos reais.
 
-- **Títulos e Ênfases (`--serif`)**: Usam a elegância atemporal da família serifada com proporções clássicas, kerning ajustado (`letter-spacing: -.04em`) e itálicos poéticos em tags `<em>` coloridas em `--wine`.
-- **Textos de Apoio e Controles (`--sans`)**: Utilizam a clareza e alta legibilidade da fonte Inter e fontes de sistema modernas.
-- **Tipografia Fluida (`clamp`)**: O tamanho dos títulos adapta-se suavemente à largura da tela sem saltos bruscos:
-  ```css
-  .hero h1 {
-    font: 400 clamp(54px, 6vw, 85px) / .96 var(--serif);
-    letter-spacing: -.04em;
-  }
-  ```
-
----
-
-### Barra de Rolagem Personalizada (Candy Twist)
-
-Inspirada nas clássicas bengalas de doces e tubos confeitados, a barra de rolagem foi esculpida com gradientes repetidos e reflexo de brilho translúcido:
-
-```css
-/* Trilho com listras suaves */
-::-webkit-scrollbar-track {
-  background: repeating-linear-gradient(135deg, #fff4dc 0 8px, #f8e8d7 8px 16px);
-  border-left: 1px solid rgba(111, 29, 59, .08);
-}
-
-/* Polegar (Thumb) confeitado multicolorido com reflexo de luz */
-::-webkit-scrollbar-thumb {
-  min-height: 58px;
-  border: 3px solid #f3e5dd;
-  border-radius: 999px;
-  background:
-    linear-gradient(112deg, transparent 0 35%, rgba(255,255,255,.62) 42% 48%, transparent 55%),
-    repeating-linear-gradient(135deg,
-      #ff5b8d 0 8px,
-      #ffd34f 8px 16px,
-      #57d7bd 16px 24px,
-      #73a8ff 24px 32px,
-      #ff9855 32px 40px,
-      #ff5b8d 40px 48px) !important;
-  box-shadow: inset 0 0 0 1px rgba(111, 29, 59, .18), 0 2px 5px rgba(111, 29, 59, .16);
-}
+```powershell
+php -d post_max_size=5M -d upload_max_filesize=4M -S 127.0.0.1:8128 -t public router.php
 ```
 
----
+Abra `http://127.0.0.1:8128`. O servidor embutido é para desenvolvimento. Encerre com Ctrl+C. Não é necessário `composer install` ou Node.js para servir os arquivos já presentes.
 
-### Componentes de UI Estilizados
+### Variáveis de configuração
 
-1. **Botões Interativos (`.button`, `.button-primary`, `.button-outline`)**:
-   - Altura tátil mínima de 50px (em conformidade com as diretrizes do Google Lighthouse).
-   - Efeito de elevação suave no hover (`transform: translateY(-2px);`).
-   - Sombra difusa colorida na cor vinho (`box-shadow: 0 12px 30px rgba(111, 29, 59, .18);`).
-2. **Cards de Produto (`.product-card`)**:
-   - Área da imagem com `aspect-ratio: 1 / 1.03` e `overflow: hidden`.
-   - Efeito de aproximação óptica suave na foto ao passar o mouse (`transform: scale(1.045);`).
-   - Selo flutuante de categoria com efeito translúcido `backdrop-filter: blur(8px)`.
-3. **Cards de Avaliações Google (`.review-card`)**:
-   - Fundo nobre em papel texturizado com bordas sutis.
-   - Cabeçalho com avatar circular individual com iniciais do cliente.
-   - Estrelas em tom dourado acessível (`--gold`).
-   - Efeito de flutuação no hover (`transform: translateY(-4px); box-shadow: 0 16px 36px rgba(70, 35, 32, .08);`).
-4. **Ilustração de Erro em CSS Puro (`.error-dessert`)**:
-   - Um bolo de confeitaria montado inteiramente com pseudo-elementos e bordas CSS (`border-radius`, sombras inset e cereja dourada), eliminando a necessidade de carregar imagens pesadas em páginas de status de erro.
+O parser de `.env` em `bootstrap.php` usa `putenv` e **sobrescreve variáveis já existentes no processo**. `.env.example` não lista todas as opções. Não versione `.env`, credenciais ou dados de clientes.
 
----
+| Variável | Uso / padrão do código |
+| --- | --- |
+| `APP_URL` | Base de URLs absolutas/canônicas; configure para o ambiente real |
+| `APP_KEY` | Chave HMAC; se vazia, usa/gera `storage\app.key` |
+| `APP_NODE` | Identificação do nó, incluindo `/health` |
+| `DB_DSN` | Vazio: JSON. MySQL: por exemplo `mysql:host=127.0.0.1;dbname=doce_atelier;charset=utf8mb4` |
+| `DB_USER`, `DB_PASSWORD` | Credenciais PDO; usuário padrão `doce` |
+| `DB_ROOT_PASSWORD` | Usada pelo Compose para inicializar o MySQL, não pelo cliente PDO |
+| `MERCADO_PAGO_ACCESS_TOKEN` | Necessário para criação/consulta de pagamentos |
+| `MERCADO_PAGO_WEBHOOK_SECRET` | Obrigatório para aceitar notificações de pagamento |
+| `MAIL_TRANSPORT` | `log` (padrão), `smtp` ou `mail` |
+| `MAIL_FROM`, `MAIL_FROM_NAME` | Padrões `admin@elda-doces.com` e `Elda Bolos e Doces` |
+| `MAIL_REPLY_TO` | Padrão `suporte@elda-doces.com` |
+| `SMTP_HOST`, `SMTP_PORT` | Servidor SMTP; porta padrão 587 |
+| `SMTP_ENCRYPTION` | `tls` (padrão), `ssl` ou `none` |
+| `SMTP_USERNAME`, `SMTP_PASSWORD` | Autenticação SMTP |
+| `GOOGLE_ANALYTICS_ID` | Padrão `G-ELDADOCES0`; não comprova coleta configurada |
+| `GOOGLE_TAG_MANAGER_ID` ou `GTM_ID` | ID GTM; padrão `GTM-T98GCPGN` |
 
-### Animações e Efeitos Visuais (Keyframes)
+As rotas e assets assumem instalação na **raiz do domínio**, não em subdiretório. Para hosts externos, o front controller redireciona acessos HTTP ou `www` para **`https://elda-doces.com`**, independentemente de `APP_URL`; `localhost` e `127.0.0.1` são exceções. Apenas trocar `APP_URL` não torna o roteamento portátil para outro domínio: revise esse redirecionamento e a configuração do proxy.
 
-#### Efeito Shimmer para Placeholder de Imagens
-Enquanto uma imagem é transferida e decodificada, o elemento exibe um gradiente reluzente contínuo:
-```css
-img[data-base64-image] {
-  background: linear-gradient(110deg, #eadbd1 8%, #f8eee7 18%, #eadbd1 33%);
-  background-size: 220% 100%;
-  animation: image-shimmer 1.25s linear infinite;
-}
+## Docker Compose
 
-@keyframes image-shimmer {
-  to { background-position-x: -220%; }
-}
+O Compose define MySQL 8.4, dois nós PHP 8.4-FPM Alpine (`app1`/`app2`), Nginx 1.27 com `least_conn` e Mailpit 1.27. O Dockerfile habilita `pdo_mysql` e OPcache. A aplicação responde em **HTTP na porta 8080**; não há TLS configurado no Compose.
 
-img[data-base64-image].is-loaded {
-  background: none;
-  animation: none;
-}
+Após ajustar `.env` para esse ambiente (em particular `APP_URL=http://localhost:8080`, chave compartilhada e senhas do banco), os comandos são:
+
+```powershell
+docker compose config --quiet
+docker compose up --build -d
+docker compose ps
+# Para parar sem remover volumes:
+docker compose down
 ```
 
-#### Efeito de Entrada de Notificações Toast
-```css
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(-12px);
-  }
-}
+- Mailpit: interface `http://localhost:8025`; SMTP `mailpit:1025` na rede dos contêineres. A porta SMTP não é publicada no host.
+- O Compose força `MAIL_TRANSPORT=smtp` e SMTP/Mailpit. Não repassa automaticamente todas as opções de remetente ou SMTP do host; para outro provedor, ajuste explicitamente o Compose.
+- `.dockerignore` exclui `.env` e `node_modules`: o arquivo local não deve entrar na imagem nem sobrescrever o SMTP do Compose dentro do PHP.
+- `mysql_data`, `php_sessions` e `php_runtime` persistem banco, sessões e estado compartilhado. Os logs HTML de `storage\mail\` não têm volume compartilhado nesse Compose.
+- `product_images` é compartilhado pelos dois nós PHP com escrita e pelo Nginx somente para leitura (`nocopy: true` no Nginx). O Dockerfile atribui `storage` e as imagens a `www-data`. Um volume vazio é inicializado pelas imagens embarcadas no contêiner PHP; um volume existente **não recebe automaticamente novos assets da imagem**.
+- Ao migrar uma instalação existente, preserve os uploads antigos e copie-os para o volume compartilhado com permissões adequadas. Faça backup antes. **`docker compose down -v` apaga os volumes e pode destruir dados.**
+
+Os valores padrão de chave e senhas são para uso local e precisam ser substituídos. Este Compose não é uma implantação pronta para produção: faltam decisões operacionais de TLS, domínio, e-mail, credenciais, backups, monitoramento e acesso ao Mailpit. Validar a sintaxe com `config --quiet` não comprova que os contêineres iniciam ou que as integrações funcionam.
+
+### Scripts Linux
+
+`install.sh`, `start.sh` e `stop.sh` são scripts POSIX/Linux, não comandos PowerShell. Leia-os antes de usar:
+
+- `install.sh` pode instalar pacotes e alterar o host via apt/dnf/apk; seu teste de versão PHP não garante compatibilidade com o código atual.
+- `start.sh` usa o serviço systemd/cloudflared quando disponível; no caminho local, inicia dois servidores PHP nas portas 9001/9002 e Nginx na 8128. `docker\nginx-local.conf` contém caminhos fixos para `/home/t0x1n/projeto`, que precisam ser adaptados.
+- `APP_PORT` afeta texto exibido pelo script, não reconfigura o listener. `CLOUDFLARE_TUNNEL=1` habilita o caminho opcional do túnel, dependente de instalação/credenciais; pode usar túnel nomeado `elda` ou temporário para 8128. O Compose não provisiona Cloudflare.
+- `stop.sh` usa encerramento por padrões de processo e pode afetar outros serviços do host. Não o execute indiscriminadamente em ambiente compartilhado.
+
+## Funcionalidades e limites
+
+### Catálogo, carrinho e pedidos
+
+- `/cardapio` aceita `categoria` e `busca`, processados no servidor. Não é busca instantânea por API.
+- O carrinho fica na sessão e limita quantidades pelo estoque cadastrado. **Criar um pedido não decrementa o estoque automaticamente.**
+- Frete fixo de **R$ 14,90** para subtotal positivo abaixo de R$ 150,00; grátis a partir de **R$ 150,00**, inclusive. Não há cálculo por transportadora ou distância.
+- Checkout exige usuário autenticado e carrinho com itens. Pedido e API de status exigem o usuário dono do pedido; administração exige papel `admin`.
+- O checkbox `save_address` só salva/atualiza o endereço quando enviado com valor `1`. Desmarcado, mantém o endereço anterior sem alterá-lo nem excluí-lo.
+- O CPF informado é enviado no `payer` ao Mercado Pago, mas não integra o endereço salvo nem os dados de cliente dos novos pedidos. O formulário não preenche CPF antigo. **Isso não purga registros legados ou backups**, que podem ainda conter CPF.
+- O status operacional (`received`, `preparing`, `shipping`, `delivered`, `cancelled`) é separado do status de pagamento. O painel mostra um retrato dos dados na renderização, não um dashboard em tempo real.
+
+### PIX e webhook
+
+`src\MercadoPagoGateway.php` cria cobranças PIX e consulta pagamentos. `isConfigured()` verifica apenas o token; não significa que o segredo do webhook esteja configurado.
+
+O endpoint `POST /webhooks/mercado-pago` exige ID numérico de 1 a 30 dígitos (string ou inteiro), aceitando `data.id` da query normalizada pelo PHP como `data_id`, ou ID do corpo. Antes de consultar o pagamento, verifica `x-signature` e `x-request-id` com `MERCADO_PAGO_WEBHOOK_SECRET`.
+
+- ID inválido: 400; assinatura inválida ou segredo vazio: 401.
+- Falha na consulta ou incompatibilidade de referência/valor: 422.
+- A assinatura HMAC usa ID, request ID e timestamp. **Não há janela de idade nem prevenção de replay implementada.**
+
+A tela de pedido oferece QR Code, copia-e-cola e consulta de status a cada 3 segundos, recarregando ao receber `approved`. O contador visual não implementa cancelamento automático ou job de expiração. Integrações devem ser exercitadas com credenciais e dados de teste; esta documentação não afirma validação de pagamentos reais.
+
+### Autenticação e e-mail
+
+As senhas usam bcrypt com custo 12. Login/cadastro passam pelo desafio de seis dígitos, cujo HMAC fica na sessão: validade de 10 minutos, cinco tentativas, intervalo de 60 segundos para reenvio e limite de quatro reenvios. Recuperação de senha usa código de 12 caracteres, válido por 15 minutos, com estado em `storage\runtime\password-resets.json`.
+
+`Mailer` com transporte `log` grava HTML, **não envia e-mail**. O modo `smtp` também registra HTML antes de tentar transmitir; a presença do log não prova entrega e uma falha SMTP não é um fallback bem-sucedido. O modo `mail` usa a função nativa do PHP.
+
+Em desenvolvimento, `php bin\latest-2fa.php` lê o último e-mail registrado. Esse utilitário e os logs expõem códigos sensíveis: não os disponibilize por HTTP nem os use para contornar autenticação em produção.
+
+O código inclui tokens CSRF nos fluxos de formulário e cabeçalhos de segurança, incluindo CSP. O webhook usa autenticação por assinatura, não token de formulário. O limitador por IP permite 2.000 requisições numa janela de 1 segundo e bloqueia por 300 segundos, **somente** em `/entrar`, `/criar-conta`, `/verificar-codigo` e `/verificar-codigo/reenviar`. Há ainda bloqueio de login por sessão após cinco falhas por 10 minutos. Isso não equivale a proteção geral contra DDoS nem a uma auditoria de segurança.
+
+### Upload de produtos
+
+Os formulários administrativos aceitam JPG/PNG com limite de **4 MiB por arquivo** (4.194.304 bytes). O front controller permite corpo de até **5 MiB** somente nos POST de criação/edição de produto, reservando espaço para multipart; outras requisições mantêm o limite de **2.000.000 bytes**. `docker\php.ini` define `upload_max_filesize=4M` e `post_max_size=5M`; os dois arquivos Nginx usam `client_max_body_size 5m`.
+
+Ao mudar esses limites, mantenha PHP, Nginx, validação da aplicação e formulário coerentes. A gravação precisa funcionar em `public\assets\images\`, inclusive no volume compartilhado do Compose.
+
+## Rotas
+
+`{slug}`, `{uuid}`, `{numero}` e `{arquivo}` representam parâmetros. Rotas de leitura aceitam GET/HEAD; as permissões continuam sendo verificadas.
+
+| Métodos | Rotas |
+| --- | --- |
+| GET/HEAD | `/`, `/cardapio`, `/produto/{slug}`, `/carrinho` |
+| GET/HEAD | `/pedido/sucesso/{numero}`, `/api/pedidos/{numero}/status`, `/minha-conta` |
+| GET/HEAD | `/admin`, `/admin/pedidos` |
+| GET/HEAD | `/health`, `/status`, `/status/{codigo}` (400, 401, 403, 404, 429, 500, 503) |
+| GET/HEAD | `/api/imagens/{arquivo}`, `/robots.txt`, `/sitemap.xml` e arquivos públicos |
+| GET/HEAD e POST | `/entrar`, `/criar-conta`, `/verificar-codigo`, `/esqueci-senha`, `/redefinir-senha`, `/checkout` |
+| GET/HEAD e POST | `/admin/produtos/novo`, `/admin/produtos/{uuid}/editar` |
+| POST | `/carrinho/adicionar`, `/carrinho/atualizar`, `/carrinho/remover`, `/sair`, `/verificar-codigo/reenviar` |
+| POST | `/admin/pedidos/{uuid}/status`, `/webhooks/mercado-pago` |
+
+`/health` retorna `status`, `service`, `node` e `time` após o bootstrap. Não testa SMTP, Mercado Pago ou a saúde completa da infraestrutura. `/status` é um catálogo de telas HTTP, não um painel de monitoramento.
+
+## Frontend e manutenção de assets
+
+O layout carrega **`app.min.css` e `app.min.js`** com versionamento por data de modificação. As fontes editáveis são `public\assets\app.css` e `public\assets\app.js`.
+
+CSS usa variáveis, Grid/Flexbox, media queries, foco visível e redução de movimento. As pilhas tipográficas usam fontes locais/de sistema; mencionar Inter na pilha não implica download dessa fonte. A fonte CSS unificada inclui os estilos de `save-address` e `password-toggle` usados pela interface.
+
+Para modificar CSS, use Node.js/npm somente como ferramentas de manutenção:
+
+```powershell
+npm ci
+npm run build:css
+npm run check:css
 ```
 
----
+`bin\build-css.cjs` usa `clean-css` 5.3.3, fixado em `package-lock.json`, e normaliza finais de linha para reprodução em Windows/Linux. Edite `app.css`, gere e mantenha `app.min.css` junto; `check:css` detecta divergência. `npm test` executa os testes de CSS em `tests\assets.test.cjs`. **Não há pipeline equivalente fornecido para JavaScript**: ao alterá-lo, mantenha a fonte e o arquivo servido coerentes.
 
-### Responsividade e Breakpoints do Layout
+O JavaScript nativo implementa:
 
-O layout foi desenvolvido no paradigma **Mobile-Friendly / Responsive Design**, operando com fluidez através de 4 faixas principais:
+- Prefetch de `/entrar`, `/criar-conta` e `/carrinho` por interação com links.
+- Menu com `aria-expanded`, Escape e clique fora; sem transferência/retorno automático de foco.
+- Toasts com fechamento e transição após 4,8 segundos; máscaras de telefone, CEP e CPF.
+- Imagens por URLs diretas, com API Base64 como alternativa; `IntersectionObserver` com margem de 1.500 px e uso de `requestIdleCallback`. Não há cache em `sessionStorage`.
+- Cópia PIX, contador, consulta de pagamento, foco no submit ao completar seis dígitos, envio de status administrativo, preview de upload e mostrar/ocultar senha.
 
-| Breakpoint | Alvo de Dispositivo | Principais Adaptações de Layout |
-| :--- | :--- | :--- |
-| **> 1000px** | Desktops e Laptops | Grid de 4 colunas em produtos e avaliações; sidebar administrativa fixa de 230px; resumos de pedido colunados à direita. |
-| **max-width: 1000px** | Laptops Compactos / Tablets Paisagem | Grid de produtos e avaliações migra para 2 colunas; métricas do admin dividem-se em 2x2. |
-| **max-width: 900px** | Tablets Retrato | Carrinho e checkout colapsam as colunas laterais, posicionando o resumo de valores abaixo do formulário de endereço. |
-| **max-width: 760px** | Smartphones | O menu horizontal é substituído pelo menu gaveta (drawer) com animação; hero tem sua tipografia reduzida para 55px; botões ocupam a largura total; cabeçalho encolhe para 71px. |
-| **max-width: 430px** | Telas Pequenas | Grid de produtos vira 2 colunas compactas com botões expandidos; o botão de WhatsApp vira um botão circular flutuante de 48x48px. |
+Esses recursos e arquivos WebP não constituem medição de desempenho ou certificação WCAG. A home contém uma única nota numérica decorativa **4.9**, em elemento `aria-hidden`; não há integração de avaliações verificadas. O JSON-LD do layout usa `Bakery` e `WebSite`, sem `aggregateRating`; os produtos incluem `Product`/`Offer` e `BreadcrumbList`. O `SearchAction` ainda presente não garante caixa de busca nos resultados de pesquisa.
 
----
+## Exportação estática: limites e cuidados
 
-### Políticas de Redução de Movimento e Contraste
+`bin\build-static.php` é um utilitário experimental, não um backend para Netlify. Ele depende de PHP/bootstrap, cURL, comandos de shell POSIX (`rm`, `cp`, `mkdir`) e de um servidor **já ativo em 127.0.0.1:8128**; não inicia o servidor. Não é um comando PowerShell portátil.
 
-O CSS inclui uma salvaguarda para usuários que configuraram seus sistemas operacionais para reduzir animações (por condições vestibulares ou sensibilidade a movimento):
+**A execução apaga `dist` e sobrescreve `netlify.toml`.** Além de capturar páginas HTTP, o script renderiza manualmente telas de administração, checkout, conta e 2FA usando dados do `Store` e identidades de demonstração. Isso pode publicar pedidos, métricas ou dados pessoais. Use exclusivamente uma base descartável e inspecione toda a saída antes de qualquer publicação.
 
-```css
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    scroll-behavior: auto !important;
-    animation: none !important;
-    transition: none !important;
-  }
-}
+A exportação não implementa autenticação, POST, carrinho persistente, pagamentos, API, webhook ou controle de acesso administrativo. Falhas HTTP podem deixar páginas ausentes sem abortar o processo. A cópia de assets não garante que GTM, manifest e ícones estejam completos; o catch-all `index.html 200` de `_redirects` pode produzir soft 404. Não há URL/deploy Netlify ou ZIP de entrega verificado por esta documentação.
+
+## Validação e preparação para implantação
+
+Com as dependências disponíveis, na raiz do projeto:
+
+```powershell
+npm run check:css
+npm test
+docker compose config --quiet
+php tests\run.php
 ```
 
-Além disso, todos os elementos interativos possuem anel de foco visível destacado para quem navega por tecla `TAB`:
-```css
-:focus-visible {
-  outline: 2px solid var(--wine) !important;
-  outline-offset: 2px !important;
-}
-```
+Os testes PHP precisam de `proc_open`, streams/sockets e `fileinfo`, além das extensões usadas pelo código. Usam servidor HTTP em loopback e fixtures isoladas: controlador, views e helpers selecionados são reais, mas bootstrap, persistência e serviços de rede são substituídos. Não usam banco, pagamento, correio ou dados pessoais reais.
 
----
+Na validação desta revisão, passaram 75 testes PHP/449 asserções com PHP 8.4.27, lint dos arquivos PHP alterados, quatro testes Node e geração/verificação CSS. A configuração expandida do Compose confirmou os mounts compartilhados de imagens. **Docker/Nginx em execução, adaptadores de persistência reais e integrações externas não foram exercitados.** Esses resultados não substituem validação no ambiente de implantação.
 
-## ⚡ Foco Principal 3: JavaScript ES6+ Vanilla (app.js)
-
-O arquivo `public/assets/app.js` reúne toda a inteligência do lado do cliente. Foi escrito estritamente em **Vanilla JavaScript moderno**, sem qualquer biblioteca ou dependência externa (zero npm, zero bundler, zero runtime overhead). Seu peso é de apenas ~6.9 KB, executando de forma instantânea.
-
-### Filosofia Zero-Dependency & Padrão IIFE
-
-Todo o código é encapsulado em uma Função Imediatamente Invocada (IIFE), garantindo isolamento de escopo absoluto:
-```javascript
-(() => {
-  'use strict';
-  // Todo o ecossistema de scripts vive isolado aqui.
-})();
-```
-
----
-
-### Pré-carregamento Preditivo de Rotas (Prefetching)
-
-O script monitora quando o cursor do mouse ou o toque do usuário se aproxima de links de alta conversão (`/entrar`, `/criar-conta`, `/carrinho`). Antes mesmo do clique ser concluído, o documento é solicitado em segundo plano e fica pronto no cache do navegador:
-
-```javascript
-const prefetched = new Set();
-const prefetchPage = (href) => {
-  if (!href || prefetched.has(href) || !/^\/(entrar|criar-conta|carrinho)$/.test(href)) return;
-  prefetched.add(href);
-  const link = document.createElement('link');
-  link.rel = 'prefetch';
-  link.as = 'document';
-  link.href = href;
-  document.head.appendChild(link);
-};
-
-document.querySelectorAll('a[href="/entrar"], a[href="/criar-conta"], a[href="/carrinho"]').forEach((anchor) => {
-  ['pointerenter', 'focusin', 'touchstart'].forEach((eventName) => {
-    anchor.addEventListener(eventName, () => prefetchPage(anchor.getAttribute('href')), { once: true, passive: true });
-  });
-});
-```
-
----
-
-### Menu Mobile com Gestão de Foco
-
-O drawer mobile cumpre integralmente os requisitos de acessibilidade da W3C:
-1. Altera `aria-expanded` entre `"true"` e `"false"`.
-2. Adiciona a classe `.menu-open` ao `<body>` para congelar o scroll do fundo da página enquanto o menu está aberto.
-3. Move o foco do teclado automaticamente para o primeiro link do menu ao abrir.
-4. Devolve o foco ao botão hamburguer ao fechar.
-5. Suporta fechamento imediato pela tecla **Escape**.
-6. Fecha automaticamente caso o usuário clique em qualquer área fora do menu.
-
-```javascript
-const toggle = document.querySelector('[data-menu-toggle]');
-const menu = document.querySelector('[data-menu]');
-
-const closeMenu = () => {
-  if (toggle?.getAttribute('aria-expanded') === 'true') {
-    toggle.setAttribute('aria-expanded', 'false');
-    menu?.classList.remove('is-open');
-    document.body.classList.remove('menu-open');
-    toggle.focus();
-  }
-};
-
-toggle?.addEventListener('click', () => {
-  const open = toggle.getAttribute('aria-expanded') === 'true';
-  toggle.setAttribute('aria-expanded', String(!open));
-  menu?.classList.toggle('is-open', !open);
-  document.body.classList.toggle('menu-open', !open);
-  if (!open) {
-    menu?.querySelector('a')?.focus();
-  }
-});
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeMenu();
-});
-
-document.addEventListener('click', (e) => {
-  if (menu?.classList.contains('is-open') && !menu.contains(e.target) && !toggle?.contains(e.target)) {
-    closeMenu();
-  }
-});
-```
-
----
-
-### Lazy Loading de Imagens Base64 + Cache de Sessão
-
-Para otimizar o consumo de banda e garantir transições instantâneas entre páginas sem recarregar bytes repetidos de fotos de bolos e doces:
-
-1. **Cache em `sessionStorage`**: As imagens requisitadas via API são salvas em memória de sessão (`doce:image:filename`). Quando o usuário visita outra página (ex: do Cardápio para o Carrinho), a imagem surge imediatamente do storage local sem tráfego de rede. O cache é descartado automaticamente quando a aba é fechada.
-2. **Deduplicação de Requisições Simultâneas**: Se o mesmo produto aparece duas vezes na mesma tela, um `Map` de promises (`imageRequests`) impede que duas requisições paralelas sejam disparadas.
-3. **IntersectionObserver por Proximidade**: Carrega as imagens 420px antes de entrarem no campo visual do usuário (`rootMargin: '420px 0px'`), garantindo que a foto já esteja renderizada antes de o scroll alcançá-la.
-4. **Prioridade Crítica**: Imagens marcadas com `data-image-priority="high"` (os 4 primeiros produtos da vitrine) furam a fila e carregam imediatamente.
-
-```javascript
-const imageRequests = new Map();
-const readSession = (key) => { try { return window.sessionStorage.getItem(key); } catch { return null; } };
-const writeSession = (key, value) => { try { window.sessionStorage.setItem(key, value); } catch { /* quota cheia ou navegação anônima */ } };
-
-const loadBase64Image = (img) => {
-  if (img.dataset.imageRequested === '1') return;
-  img.dataset.imageRequested = '1';
-  const filename = img.dataset.base64Image;
-  if (!filename || !/^[a-z0-9-]+\.(jpg|webp)$/.test(filename)) return;
-  const key = `doce:image:${filename}`;
-  const cached = readSession(key);
-  if (cached) {
-    img.src = cached;
-    img.classList.add('is-loaded');
-    return;
-  }
-  if (!imageRequests.has(filename)) {
-    imageRequests.set(filename, fetch(`/api/imagens/${encodeURIComponent(filename)}`, { credentials: 'same-origin', cache: 'no-store' })
-      .then(response => {
-        if (!response.ok) throw new Error('Imagem indisponível');
-        return response.json();
-      })
-      .then(({ data }) => {
-        if (typeof data !== 'string' || !data.startsWith('data:image/')) throw new Error('Formato inválido');
-        writeSession(key, data);
-        return data;
-      }));
-  }
-  imageRequests.get(filename)
-    .then((data) => {
-      img.src = data;
-      img.classList.add('is-loaded');
-    })
-    .catch(() => img.closest('.product-image, .detail-image, .cart-line')?.classList.add('image-error'));
-};
-```
-
----
-
-### Máscaras Reativas de Entrada (Telefone, CEP, CPF)
-
-Formatam os campos automaticamente conforme o cliente digita, higienizando caracteres especiais sem impedir a edição:
-
-```javascript
-// Telefone (reconhece dinamicamente 8 ou 9 dígitos no celular)
-const phone = document.querySelector('input[name="phone"]');
-phone?.addEventListener('input', () => {
-  const digits = phone.value.replace(/\D/g, '').slice(0, 11);
-  phone.value = digits.length > 10
-    ? digits.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3')
-    : digits.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-});
-
-// CEP (XXXXX-XXX)
-const zip = document.querySelector('input[name="zip"]');
-zip?.addEventListener('input', () => {
-  const digits = zip.value.replace(/\D/g, '').slice(0, 8);
-  zip.value = digits.replace(/(\d{5})(\d{0,3})/, '$1-$2');
-});
-
-// CPF (XXX.XXX.XXX-XX)
-const cpf = document.querySelector('input[name="cpf"]');
-cpf?.addEventListener('input', () => {
-  const digits = cpf.value.replace(/\D/g, '').slice(0, 11);
-  cpf.value = digits
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-});
-```
-
----
-
-### Cópia Inteligente do Código PIX (Clipboard API)
-
-Permite copiar o código com um único toque no celular ou desktop, empregando `navigator.clipboard.writeText` com fallback para `document.execCommand('copy')`:
-
-```javascript
-document.querySelector('[data-copy-pix]')?.addEventListener('click', async (event) => {
-  const input = document.querySelector('#pix-code');
-  if (!input) return;
-  try {
-    await navigator.clipboard.writeText(input.value);
-    event.currentTarget.textContent = 'Código copiado ✓';
-  } catch {
-    input.select();
-    document.execCommand('copy');
-    event.currentTarget.textContent = 'Código copiado ✓';
-  }
-});
-```
-
----
-
-### Avanço Automático no Input 2FA
-
-Na tela de verificação de duas etapas (`views/auth/two-factor.php`), o campo de código aceita apenas números e, assim que o 6º dígito é preenchido, direciona o foco imediatamente para o botão de confirmação:
-
-```javascript
-const codeInput = document.querySelector('.code-input');
-codeInput?.addEventListener('input', () => {
-  codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 6);
-  if (codeInput.value.length === 6) {
-    codeInput.form?.querySelector('button[type="submit"]')?.focus();
-  }
-});
-```
-
----
-
-### Cronômetro Regressivo de Expiração
-
-Usado para controlar o tempo de validade do PIX e do código 2FA. Atualiza o relógio a cada 1.000 ms e adiciona a classe `.expired` quando o tempo se esgota:
-
-```javascript
-const countdown = document.querySelector('[data-countdown]');
-if (countdown) {
-  const tick = () => {
-    const remaining = Math.max(0, Number(countdown.dataset.expires) - Math.floor(Date.now() / 1000));
-    countdown.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
-    if (remaining === 0) countdown.closest('.code-help')?.classList.add('expired');
-  };
-  tick();
-  window.setInterval(tick, 1000);
-}
-```
-
----
-
-### Sistema de Notificações Toast Temporizadas
-
-Toasts de sucesso ou erro são exibidos e, após 4,8 segundos, recebem a classe `.toast-out` para desaparecerem suavemente com CSS. O cliente também pode fechá-los a qualquer momento clicando no botão "×":
-
-```javascript
-document.querySelectorAll('.toast button').forEach((button) => {
-  button.addEventListener('click', () => button.closest('.toast')?.remove());
-});
-window.setTimeout(() => {
-  document.querySelectorAll('.toast').forEach((toast) => toast.classList.add('toast-out'));
-}, 4800);
-```
-
----
-
-### Auto-Submit de Formulários Administrativos
-
-No painel de gerenciamento de pedidos, qualquer alteração no seletor de status dispara o envio do formulário sem necessidade de botões "Salvar" manuais:
-
-```javascript
-document.querySelectorAll('[data-auto-submit]').forEach((select) => {
-  select.addEventListener('change', () => select.form?.submit());
-});
-```
-
----
-
-## 🔒 Backend, Segurança e Armazenamento de Dados
-
-### PHP 8.4 Nativo e Front Controller
-Toda a aplicação é roteada pelo Front Controller `public/index.php`. O roteamento é construído sobre funções puras e controllers semânticos no namespace `App\` em `src/`.
-
-### Persistência Híbrida: JsonStore vs. MysqlStore
-A classe abstrata `Store` (`src/Store.php`) define o contrato unificado de dados. O sistema implementa dois adaptadores intercambiáveis:
-1. **`JsonStore` (`storage/data.json`)**:
-   - Ideal para execução local, testes e demonstração sem depender da instalação de bancos externos.
-   - Opera com concorrência segura através de bloqueio exclusivo de arquivo (`flock($fp, LOCK_EX)`).
-2. **`MysqlStore`**:
-   - Projetado para produção sob alta concorrência.
-   - Utiliza tabelas relacionais (`users`, `products`, `orders`, `order_items`, `two_factor_codes`) definidas em `database/schema-v2.sql`.
-
-### Autenticação em Duas Etapas (2FA) e Mailer
-- Todos os logins e cadastros exigem confirmação via código aleatório de 6 dígitos enviado por e-mail.
-- Os códigos possuem expiração temporal de 10 minutos, controle de tentativas e cooldown de reenvio.
-- Os códigos são assinados com HMAC através da chave `APP_KEY`.
-- Durante desenvolvimento, o script `php bin/latest-2fa.php` permite inspecionar no terminal o último código gerado sem precisar abrir a caixa de e-mail.
-
-### Checkout PIX e Webhooks Mercado Pago
-- Integração nativa com a API oficial do Mercado Pago (`src/MercadoPagoGateway.php`).
-- Criação de pagamentos com tipo `payment_method_id = 'pix'`.
-- Notificações de pagamento em tempo real recebidas em `/webhooks/mercado-pago`.
-- Validação estrita da assinatura do webhook (`X-Signature` e `X-Request-Id`) com o `MERCADO_PAGO_WEBHOOK_SECRET` para prevenir fraudes.
-
-### Medidas de Segurança
-- **Bcrypt**: Todas as senhas de clientes e administradores são hasheadas com `password_hash($pass, PASSWORD_BCRYPT)`.
-- **CSRF Token**: Validação de token em todos os formulários `POST`.
-- **Rate Limiting**: O componente `RateLimiter` (`src/RateLimiter.php`) protege rotas de autenticação, permitindo até 2.000 requisições antes de aplicar bloqueio temporário de 5 minutos por IP.
-- **CSP (Content-Security-Policy)**: Cabeçalhos estritos que barram injeção de scripts não autorizados, XSS e framing não permitido (`X-Frame-Options: DENY`).
-
----
-
-## 📂 Mapa Completo do Repositório (Árvore de Arquivos)
-
-```
-projeto/
-├── .agents/                    # Regras, workflows e configurações dos assistentes de IA
-│   ├── rules/
-│   │   └── graphify.md         # Regra mandatória de sincronização do knowledge graph
-│   └── workflows/
-│       └── graphify.md         # Workflow de indexação com Graphify
-├── bin/
-│   └── latest-2fa.php          # Utilitário CLI para inspecionar o último código 2FA emitido
-├── database/
-│   └── schema-v2.sql           # DDL relacional para MySQL de produção
-├── docker/
-│   ├── nginx.conf              # Configuração Nginx com balanceamento least_conn para Docker
-│   ├── nginx-local.conf        # Configuração Nginx para balanceamento local sem containers
-│   ├── php.ini                 # Diretivas de produção (OPcache, limites de upload, timezone)
-│   └── proxy-headers.conf      # Cabeçalhos de repasse de IP real e SSL para proxies reversos
-├── public/                     # Raiz pública (Document Root da aplicação)
-│   ├── index.php               # Front Controller, roteamento HTTP e tratamento de rotas
-│   ├── assets/
-│   │   ├── app.css             # Folha de estilos completa, tokens, animações e layout
-│   │   ├── app.js              # Toda a lógica Vanilla JS, lazyload, máscaras e clipboard
-│   │   └── images/             # Banco de imagens estáticas e fotos de vitrine
-│   │       ├── caramelo.jpg    # Foto: Bolo Caramelo Dourado
-│   │       ├── chocolate.jpg   # Foto: Brigadeiros Belga e Trufas
-│   │       ├── elda-chocolate.jpg # Foto: Vitrine de Chocolate
-│   │       ├── elda-doces.jpg  # Foto: Variedade de Doces Finos
-│   │       ├── elda-logo.jpg   # Logotipo oficial da Elda Bolos e Doces
-│   │       ├── elda-morango.jpg# Foto: Balcão e Doces com Morango
-│   │       ├── favicon.svg     # Ícone vetorial da aba do navegador
-│   │       ├── hero-doces.png  # Imagem principal da seção Hero
-│   │       ├── hero-doces.webp # Versão compactada em WebP para alta performance
-│   │       ├── morango.jpg     # Foto: Tartelette Lumière
-│   │       └── pistache.jpg    # Foto: Macarons de Pistache
-├── src/                        # Núcleo da Aplicação (Backend)
-│   ├── bootstrap.php           # Inicialização de ambiente, sessão, helpers e injeção de dependências
-│   ├── Mailer.php              # Camada de disparo de e-mails (SMTP, PHP mail, log em disco)
-│   ├── MercadoPagoGateway.php  # Cliente HTTP para API de pagamentos PIX e validação de webhooks
-│   ├── RateLimiter.php         # Controle de taxa de requisições e proteção contra força bruta
-│   └── Store.php               # Classes abstratas e concretas de repositório (JsonStore & MysqlStore)
-├── storage/                    # Armazenamento volátil e banco local
-│   ├── data.json               # Base de dados padrão em JSON (produtos, usuários, pedidos)
-│   ├── logs/                   # Logs de acesso e depuração do Nginx/PHP
-│   └── mail/                   # Caixa de saída dos e-mails locais do sistema
-├── views/                      # Camada de Apresentação (Templates HTML / PHP)
-│   ├── layout.php              # Shell com header, footer, a11y skip-link e schema.org
-│   ├── home.php                # Página inicial completa (Hero, Provas sociais, Vitrine)
-│   ├── catalog.php             # Catálogo filtrável por categorias com pesquisa
-│   ├── product.php             # Página individual do produto
-│   ├── cart.php                # Carrinho de compras com barra de frete
-│   ├── checkout.php            # Checkout em duas etapas para PIX
-│   ├── order-success.php       # Confirmação com QR Code PIX e código copia-e-cola
-│   ├── account.php             # Perfil do cliente e rastreamento de pedidos
-│   ├── status-index.php        # Índice de páginas de teste e erro
-│   ├── partials/
-│   │   └── product-card.php    # Card individual de produto
-│   ├── auth/
-│   │   ├── login.php           # Tela de login
-│   │   ├── register.php        # Tela de registro de usuário
-│   │   └── two-factor.php      # Tela de autenticação 2FA
-│   ├── admin/
-│   │   ├── dashboard.php       # Painel administrativo com faturamento e produtos
-│   │   ├── orders.php          # Gestão e despacho operacional de pedidos
-│   │   └── product-form.php    # Formulário de criação/edição de produtos
-│   └── errors/
-│       └── status.php          # Template padrão de respostas de erro HTTP (404, 500, etc.)
-├── router.php                  # Roteador para o servidor embutido do PHP CLI
-├── Dockerfile                  # Imagem base PHP 8.4-FPM para conteinerização
-├── docker-compose.yml          # Orquestração do cluster (2 nós PHP-FPM + Nginx + Mailpit + MySQL)
-├── install.sh                  # Script de instalação e checagem de dependências Linux
-├── start.sh                    # Script de inicialização do ambiente local balanceado
-└── README.md                   # Esta documentação técnica
-```
-
----
-
-## 🌐 Acesso ao Projeto
-
-- **Website Oficial**: [https://elda-doces.com](https://elda-doces.com)
-
----
-
-*Documentação mantida pela equipe técnica de desenvolvimento da Elda Bolos e Doces.*  
-*Última atualização: Setembro de 2026.*
+Antes de uma implantação, valide em ambiente descartável: rotas e permissões; login/2FA/reset por e-mail de teste; checkbox de endereço e não persistência de CPF em novos registros; upload nos limites em ambos os nós; assinatura obrigatória, referência e valor do webhook com fixtures; consistência CSS; backup/restauração dos volumes. Configure TLS/proxy, domínio, chaves, contas iniciais, SMTP e credenciais de pagamento separadamente. Nunca use exportação estática ou dados reais como atalho para esses testes.
 

@@ -1,4 +1,6 @@
 .git
+.env
+node_modules
 storage/data.json
 storage/sessions/*
 storage/app.key

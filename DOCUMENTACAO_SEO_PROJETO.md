@@ -1,255 +1,157 @@
-# Documentação do Projeto & Relatório de SEO — Elda Bolos e Doces
+# SEO e apresentação do projeto — Elda Bolos e Doces
 
----
+Este documento registra o que o código implementa e o que ainda precisa ser verificado na implantação. Não é um relatório de auditoria externa, de posições no Google ou de métricas coletadas em produção. Para instalação, configuração, rotas e persistência, consulte o [README](README.md).
 
-## 1. Resumo Executivo do Projeto
+## 1. Arquitetura que gera as páginas
 
-O **Elda Bolos e Doces** é uma plataforma completa de e-commerce e catálogo digital desenvolvida para uma confeitaria artesanal tradicional de **Sorocaba/SP**. O projeto foi concebido para oferecer uma experiência de compra rápida, acolhedora e confiável, alinhando excelência visual a padrões rigorosos de engenharia de software, segurança cibernética e **Otimização para Motores de Busca (SEO)**.
+A aplicação usa PHP e templates renderizados no servidor. `public\index.php` é um **front controller procedural**; `src\bootstrap.php` inicializa os serviços e define funções globais. Não há framework MVC nem namespace `App`. `Store` é uma **interface**, com implementações `JsonStore` e `MysqlStore` em `src\Store.php`.
 
-### Destaques do Projeto:
-- **Catálogo & Vitrine Digital:** Navegação fluida por categorias (Bolos, Tortinhas, Macarons, Brigadeiros), busca textual em tempo real e páginas de detalhe com imagens de alta definição.
-- **Fluxo de Conversão & Checkout PIX:** Sacola de compras reativa, cálculo de frete inteligente (frete grátis acima de R$ 150,00) e integração oficial com **Mercado Pago PIX** com emissão de QR Code e chave Copia e Cola dinâmicos.
-- **Autenticação Segura com 2FA:** Autenticação de clientes e administradores com senha protegida em **Bcrypt (cost 12)** e verificação em duas etapas (**2FA**) via e-mail com código de 6 dígitos assinado via HMAC-SHA256.
-- **Painel Administrativo (RBAC):** Gestão completa da vitrine (CRUD de produtos, upload/seleção de fotos, estoque, preços promocionais) e acompanhamento operacional dos pedidos com alteração de status em tempo real.
-- **Infraestrutura Escalável:** Balanceamento de carga com **Nginx (`least_conn`)** distribuindo requisições entre instâncias paralelas do **PHP-FPM**, cache agressivo, gzip e rate limiting distribuído contra ataques de negação de serviço.
+Sem `DB_DSN`, o conteúdo vem de `storage\data.json`. Com DSN, vem de SQL/MySQL nas tabelas `products`, `users`, `orders` e `order_items`. O catálogo aceita os parâmetros `categoria` e `busca` no servidor. Busca e filtros não são uma API de pesquisa instantânea. As páginas públicas principais são `/`, `/cardapio` e `/produto/{slug}`.
 
----
+| Arquivo | Responsabilidade relacionada a SEO/apresentação |
+| --- | --- |
+| `public\index.php` | Roteamento, títulos/descrições passados às views, redirecionamentos, robots e sitemap |
+| `src\bootstrap.php` | `request_base_url()`, `versioned_asset()`, renderização e helpers |
+| `views\layout.php` | HTML comum, título, metas, canonical, Open Graph/Twitter, JSON-LD institucional e analytics |
+| `views\home.php` | Hero, conteúdo institucional, vitrine e nota decorativa |
+| `views\catalog.php` | Listagem e filtros de produtos |
+| `views\product.php` | Detalhe, breadcrumbs e JSON-LD de produto/oferta |
+| `views\partials\product-card.php` | Cards e links de produto |
+| `public\assets\app.css` e `app.min.css` | Fonte e CSS servido pelo layout |
+| `public\assets\app.js` e `app.min.js` | Fonte e JavaScript servido pelo layout |
+| `bin\build-css.cjs` | Geração/verificação reproduzível do CSS minificado |
+| `bin\build-static.php` | Exportação experimental, com restrições descritas abaixo |
 
-## 2. Relatório Completo de Técnicas de SEO Aplicadas
+As cópias em `storage\backup-frontend\` e `storage\backup-src\` são históricas, não a implementação ativa. Um arquivo ou uma regra preservada nessas cópias não comprova comportamento atual.
 
-O projeto implementou todas as diretrizes oficiais do **Google Search Essentials**, divididas em quatro pilares fundamentais:
+## 2. Metadados e URLs
 
-### 2.1. SEO On-Page (Estrutura e Conteúdo Semântico)
+### Implementação no layout
 
-1. **Hierarquia Semântica Rigorosa de Títulos (Headings):**
-   - **`<h1>` Único por Página:** Cada página possui um único cabeçalho H1 semanticamente expressivo contendo palavras-chave primárias e de cauda longa (ex: *"Doces artesanais feitos para encantar em Sorocaba"*, *"Nosso cardápio"*, *"Tartelette Lumière — Tortinhas"*).
-   - **`<h2>` e `<h3>` Estruturados:** Seções temáticas utilizam `<h2>` e os cards de produtos utilizam `<h3>`, permitindo que os robôs de busca compreendam a hierarquia lógica do conteúdo sem saltos incorretos de nível.
+- Documento com idioma `pt-BR`, viewport e metadados de tema.
+- `<title>` derivado do título fornecido pela página, com sufixo da marca quando necessário; há título e descrição padrão quando a página não os fornece. Não há garantia de tamanho máximo de 60/155 caracteres.
+- Canonical formado por `request_base_url()` e pelo caminho da requisição, **sem query string**. Filtros `?busca=` e `?categoria=` do cardápio apontam, portanto, para a mesma URL canônica de `/cardapio`.
+- Alternates `pt-BR`, `pt` e `x-default` apontam para essa mesma URL; não significam que existam versões traduzidas.
+- Open Graph com locale, tipo, nome do site, título, descrição, URL e imagem; Twitter Card do tipo `summary_large_image`. A imagem padrão é `hero-doces.webp`, salvo imagem específica fornecida pela página.
 
-2. **Otimização de Metadados e Snippets (SERP CTR):**
-   - **`<title>` Dinâmico:** Cada rota possui um título exclusivo no formato `[Nome da Página/Produto] — Elda Bolos e Doces`, respeitando o limite ideal de 60 caracteres para não sofrer truncamento visual no Google.
-   - **`<meta name="description">` Contextual:** Textos descritivos redigidos dentro de 155 caracteres contendo chamadas para ação (CTA) e termos de intenção de compra para maximizar a taxa de cliques orgânicos (CTR).
-   - **Tags Canônicas (`<link rel="canonical">`):** Presentes no `<head>` de todas as páginas públicas via função `request_base_url()`, eliminando penalidades por conteúdo duplicado decorrentes de parâmetros de rastreamento (`?busca=`, `?categoria=`) ou variações de protocolo (HTTP vs. HTTPS).
+Essas tags fornecem informações aos consumidores. Não garantem snippets específicos, cards em todos os aplicativos, eliminação de conteúdo duplicado ou aumento de cliques. A apresentação final depende do crawler, da disponibilidade das URLs e de seus caches.
 
-3. **SEO de Imagens & Acessibilidade (WCAG 2.1):**
-   - **Atributo `alt` Descritivo:** Todas as imagens possuem textos alternativos contextuais ricos em palavras-chave (ex: `alt="Tartelette Lumière — Massa amanteigada, creme de baunilha e morangos frescos"`).
-   - **Dimensões Explícitas (`width` e `height`):** Todos os elementos `<img>` contam com dimensões exatas declaradas, eliminando totalmente o **CLS (Cumulative Layout Shift)** e melhorando a pontuação do Core Web Vitals.
-   - **Tags Semânticas `<figure>` e `<figcaption>`:** Utilizadas na galeria fotográfica da vitrine, associando legenda textual diretamente ao elemento gráfico para indexação no Google Imagens.
+### Configuração de domínio
 
-4. **Navegação Estrutural e Breadcrumbs:**
-   - Implementação de trilhas de navegação semânticas (`<nav class="breadcrumbs">`) nas páginas de produto (`Início / Cardápio / Nome do Doce`), indicando a taxonomia da loja para os buscadores.
+`APP_URL` é usado por `request_base_url()` para compor URLs absolutas. Entretanto, o redirecionamento HTTP/`www` de hosts externos em `public\index.php` tem destino fixo **`https://elda-doces.com`**, independente dessa variável. `localhost` e `127.0.0.1` são exceções para desenvolvimento.
 
-5. **Link Building Interno (Distribuição de PageRank / Link Juice):**
-   - Links descritivos conectam a página inicial aos produtos populares, categorias filtradas, produtos relacionados e páginas institucionais, mantendo um grafo de links limpo e rastreável.
+Ao hospedar em outro domínio, revise também esse redirecionamento e o proxy. Rotas e assets assumem a raiz do domínio, não instalação em subpasta. `.env.example` contém um domínio de exemplo, que precisa ser substituído. O parser de `.env` sobrescreve variáveis de ambiente existentes.
 
----
+## 3. Rastreamento e status HTTP
 
-### 2.2. SEO Técnico & Rastreabilidade (Crawling & Indexing)
+### Sitemap e robots
 
-1. **Protocolo Sitemap XML Dinâmico (`/sitemap.xml`):**
-   - Gerado automaticamente pelo backend em conformidade com o padrão internacional **sitemaps.org (protocolo 0.9)**.
-   - Mapeia a Home (`priority: 1.0`), o Cardápio (`priority: 0.8`) e **todos os produtos ativos** com seus respectivos slugs semânticos (`/produto/{slug}`), garantindo indexação instantânea de novidades na vitrine sem edição manual.
+`/sitemap.xml` é gerado dinamicamente com a home, o cardápio e produtos ativos. Ele facilita descoberta de URLs; não garante inclusão no índice nem indexação imediata.
 
-2. **Diretivas para Motores de Busca (`/robots.txt`):**
-   - Rota dinâmica que libera o rastreamento irrestrito das áreas públicas da loja (`Allow: /`).
-   - Bloqueia áreas administrativas e transientes (`Disallow: /admin`, `/minha-conta`, `/checkout`, `/pedido/`, `/webhooks/`), preservando o **Crawl Budget** do Googlebot para as páginas que realmente geram tráfego.
-   - Contém a declaração explícita do sitemap: `Sitemap: https://seu-dominio.com/sitemap.xml`.
-
-3. **URLs Amigáveis com Slugs Semânticos (Clean URLs):**
-   - Roteador limpo sem extensões de arquivo (`.php`, `.html`) ou identificadores numéricos opacos.
-   - Função `slugify()` no backend converte caracteres especiais e acentos em texto amigável (ex: `/produto/bolo-caramelo-dourado`).
-
-4. **Prevenção de Soft 404 & Códigos de Status HTTP Semanticamente Corretos:**
-   - A aplicação nunca retorna código 200 OK para páginas inexistentes (o que geraria o erro grave de Soft 404 perante o Google).
-   - Retorno estrito de **HTTP 404 Not Found** com template acolhedor e links de recuperação.
-   - Suporte a requisições **HTTP HEAD** além de GET, permitindo que crawlers verifiquem a integridade dos cabeçalhos com mínimo consumo de dados.
-
-5. **Cache Busting e Versionamento de Assets:**
-   - Função `versioned_asset()` injeta a data de modificação (`?v=timestamp`) em estilos e scripts, permitindo cabeçalhos HTTP com cache de longa duração (`Cache-Control: public, max-age=31536000, immutable`) sem riscos de servir arquivos obsoletos.
-
----
-
-### 2.3. Dados Estruturados (Schema.org / JSON-LD) & Rich Snippets
-
-O site conta com blocos de dados estruturados em formato **JSON-LD** injetados nativamente, permitindo que o Google exiba resultados enriquecidos (Rich Snippets) na busca:
-
-1. **Schema `@type: Bakery` / `LocalBusiness` (Página Inicial):**
-   - Informa ao Google o nome oficial, logotipo, telefone de atendimento com DDI (`+55-15-99745-1766`), faixa de preço (`$$`), tipo de culinária, endereço físico completo em Sorocaba/SP, coordenadas geográficas e horários de funcionamento (Seg–Sáb, 09h às 19h).
-   - Alimenta diretamente a exibição no **Google Maps** e no **Google Meu Negócio (Local Pack)**.
-
-2. **Schema `@type: WebSite`:**
-   - Inclui diretiva `potentialAction` do tipo `SearchAction`, habilitando a caixa de pesquisa direta do site (Sitelinks Search Box) quando exibido nos resultados do Google.
-
-3. **Schema `@type: Product` e `@type: Offer` (Páginas de Produto):**
-   - Informa nome do produto, descrição, imagem, categoria, marca (`Elda Bolos e Doces`), preço em reais (`BRL`), condição do item (`NewCondition`) e disponibilidade em estoque (`InStock` ou `OutOfStock`), habilitando cards de produto no Google Shopping orgânico.
-
-4. **Schema `@type: BreadcrumbList`:**
-   - Indica a sequência exata de navegação hierárquica para que o Google substitua a URL crua por uma trilha visual elegante nas SERPs.
-
----
-
-### 2.4. Open Graph & Social SEO (WhatsApp, Instagram, Facebook, X)
-
-- Metatags **Open Graph (`og:locale`, `og:type`, `og:site_name`, `og:title`, `og:description`, `og:url`, `og:image`)** configuradas no layout mestre.
-- Metatags **Twitter Card (`summary_large_image`)**.
-- Ao compartilhar qualquer link da Elda Bolos e Doces no **WhatsApp**, Telegram ou redes sociais, o aplicativo gera automaticamente um card com foto nítida, título chamativo e resumo do doce.
-
----
-
-### 2.5. Performance & Core Web Vitals (Fator de Ranqueamento Oficial)
-
-1. **LCP (Largest Contentful Paint < 2.5s):**
-   - Imagem principal da Hero com atributo `fetchpriority="high"` para download prioritário na renderização da árvore crítica.
-   - As 4 primeiras imagens do cardápio recebem prioridade alta, enquanto as demais utilizam lazy loading progressivo via `IntersectionObserver` com margem de 420px de antecipação.
-
-2. **CLS (Cumulative Layout Shift = 0):**
-   - Todos os blocos, imagens e componentes possuem dimensões e aspect-ratio reservados previamente no CSS, garantindo estabilidade visual durante a renderização.
-
-3. **INP / FID (Interaction to Next Paint):**
-   - **Prefetching Preditivo:** O arquivo `app.js` escuta eventos de foco, toque ou hover (`pointerenter`, `focusin`, `touchstart`) nos links de maior valor (`/carrinho`, `/entrar`, `/criar-conta`) e insere `<link rel="prefetch">` dinamicamente no `<head>`. A página é baixada em background antes do clique terminar, tornando a navegação instantânea.
-   - **JavaScript Vanilla Zero-Bloat:** Sem React, Vue ou Angular pesados que atrasam a thread principal do navegador.
-
-4. **SessionStorage Caching:**
-   - Imagens em Base64 obtidas pela API interna são salvas no `sessionStorage` do navegador, eliminando requisições repetidas ao transitar entre produtos e cardápio.
-
----
-
-### 2.6. SEO Local (Sorocaba & Região Metropolitana)
-
-- **NAP (Name, Address, Phone) Consistente:** Nome da empresa (*Elda Bolos e Doces*), endereço físico (*Av. Dr. Afonso Vergueiro, 2548 • Vila Augusta, Sorocaba/SP*) e telefone com DDD 15 presentes no rodapé de todas as páginas, no HTML semântico (`<address>`) e no JSON-LD.
-- Links de autoridade local integrados diretamente para o perfil no **iFood Sorocaba** e WhatsApp comercial.
-
----
-
-## 3. Arquitetura do Sistema e Estrutura de Arquivos
-
-O projeto adota uma arquitetura limpa em MVC simplificado (Model-View-Controller) com Front Controller único:
+`/robots.txt` declara o sitemap e contém restrições para:
 
 ```text
-projeto/
-├── bin/
-│   ├── build-static.php       # Script de geração do build estático para Netlify
-│   └── latest-2fa.php          # Utilitário CLI para inspecionar o último código 2FA
-├── database/
-│   └── schema-v2.sql           # Schema relacional MySQL com tabelas products, users, orders
-├── docker/
-│   ├── nginx.conf              # Configuração Nginx de produção com least_conn e SSL
-│   ├── nginx-local.conf        # Configuração Nginx local balanceando portas 9001 e 9002
-│   ├── php.ini                 # Diretivas PHP (OPcache, limites de upload, segurança)
-│   └── proxy-headers.conf      # Cabeçalhos de proxy reverso (X-Forwarded-For, etc.)
-├── public/
-│   ├── assets/
-│   │   ├── app.css             # Estilos do sistema, responsividade, Fini Tubes scrollbar
-│   │   ├── app.js              # Interações client-side, prefetch, lazy load, máscaras
-│   │   └── images/             # Imagens otimizadas (WebP, JPG, SVG favicon)
-│   └── index.php               # Front Controller, Roteador HTTP, Sitemap e Robots
-├── src/
-│   ├── bootstrap.php           # Inicialização da aplicação, CSP, sessões, helpers de SEO
-│   ├── Mailer.php              # Serviço de e-mails transacionais (SMTP TLS, Mail, Log)
-│   ├── MercadoPagoGateway.php  # Integração oficial PIX Mercado Pago e Webhooks HMAC
-│   ├── RateLimiter.php         # Limitador de taxa com lock exclusivo e anonimização de IP
-│   └── Store.php               # Camada de repositório (JsonStore e MysqlStore)
-├── storage/                    # Sessões de cluster, logs e dados transacionais
-├── views/
-│   ├── account.php             # Área do cliente e histórico de encomendas
-│   ├── cart.php                # Sacola de compras com barra de frete grátis
-│   ├── catalog.php             # Cardápio com filtros de categoria e busca semântica
-│   ├── checkout.php            # Checkout com dados de entrega e emissão de PIX
-│   ├── home.php                # Página inicial (Hero LCP, história local, vitrine)
-│   ├── layout.php              # Layout mestre HTML5 com todas as metatags e JSON-LD
-│   ├── order-success.php       # Tela de confirmação com QR Code PIX e Copia e Cola
-│   ├── product.php             # Detalhes do doce, Schema Product e itens relacionados
-│   ├── status-index.php        # Catálogo de observabilidade e status HTTP
-│   ├── admin/                  # Painel administrativo (Dashboard, Pedidos, Produtos)
-│   ├── auth/                   # Autenticação (Login, Registro e 2FA de 6 dígitos)
-│   ├── errors/                 # Páginas de erro personalizadas (400, 403, 404, 500, etc.)
-│   └── partials/               # Componentes reutilizáveis (Card de produto)
-├── dist/                       # Build estático compilado pronto para deploy no Netlify
-├── netlify.toml                # Configuração de build e headers HTTP para o Netlify
-├── site-netlify.zip            # Pacote compactado para publicação direta no Netlify Drop
-├── entrega-canvas-elda-doces.zip # Pacote completo para submissão no Canvas LMS
-├── install.sh                  # Instalador universal de dependências de sistema
-├── start.sh                    # Inicializador dos nós PHP e balanceador Nginx
-└── DOCUMENTACAO_SEO_PROJETO.md # Este documento
+/admin
+/minha-conta
+/checkout
+/pedido/
+/webhooks/
 ```
 
----
+Robots é uma orientação para crawlers, **não controle de acesso nem garantia de desindexação**. O layout comum emite meta robots `index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1`; não existe nessa meta uma política específica `noindex` para cada área sensível. Login, permissões e propriedade do pedido continuam sendo verificados pelo backend.
 
-## 4. Guia de Execução Local e Produção
+### Respostas e assets
 
-### 4.1. Instalação e Inicialização Automática
-O projeto possui scripts automatizados que configuram o ambiente em qualquer distribuição Linux:
+O controlador possui tratamento de páginas inexistentes e templates para 400, 401, 403, 404, 429, 500 e 503; rotas de leitura aceitam GET/HEAD. Verifique os status no ambiente implantado, pois proxy e exportação podem alterar o resultado. Em particular, a exportação estática contém catch-all com 200, diferente de uma resposta 404 do PHP.
 
-```bash
-# 1. Instalar pacotes necessários (PHP 8+, Nginx, cURL, OpenSSL)
-./install.sh
+`versioned_asset()` adiciona a data de modificação ao endereço de assets. Nginx contém configuração de cache/compressão; o comportamento depende do servidor utilizado e não deve ser presumido para todo HTML ou para o servidor embutido do PHP. O versionamento não dispensa verificação de cache após a implantação.
 
-# 2. Iniciar a infraestrutura balanceada (2 nós PHP + Nginx na porta 8128)
-./start.sh
+`/health` expõe `status`, `service`, `node` e `time` após o bootstrap; não é teste de SMTP, pagamento, SEO ou disponibilidade completa. `/status` apenas apresenta as telas HTTP disponíveis.
+
+## 4. Dados estruturados e informação comercial
+
+### JSON-LD realmente presente
+
+`views\layout.php` emite um `@graph` com:
+
+- **`Bakery`**: identidade da loja, URL, logotipo, imagem, descrição, telefone, faixa de preço, endereço, coordenadas, horário e links externos. Esses valores estão definidos no template.
+- **`WebSite`**: nome, URL, idioma e `potentialAction` do tipo **`SearchAction`**, cujo alvo é `/cardapio?busca={search_term_string}`.
+
+`views\product.php` emite outro grafo com:
+
+- **`Product` / `Offer`**: nome, descrição, imagem, categoria, marca, preço em BRL, condição e disponibilidade derivada do estoque cadastrado.
+- **`BreadcrumbList`**: Início → Cardápio → Produto, também apresentado na navegação HTML.
+
+Não há `aggregateRating` no JSON-LD ativo. O `SearchAction` ainda existe no markup, mas sua presença **não garante caixa de busca nos resultados**. Os schemas tampouco garantem rich results, Google Shopping ou atualização de cadastro no Google Maps. Valide o JSON efetivamente renderizado e sua correspondência com o conteúdo visível antes de solicitar indexação.
+
+### Nota e avaliações
+
+A home contém **uma única nota numérica, 4.9**, em um elemento decorativo do hero com `aria-hidden`. É texto estático, não integração com API de avaliações nem nota comprovada por esta documentação. Não há base para apresentar uma contagem de avaliações verificadas ou tratar os depoimentos da página como registros autenticados por um serviço externo.
+
+O template contém dados comerciais de Sorocaba/SP, incluindo endereço, telefone, horários e links para Instagram, iFood e WhatsApp. Sua presença no código não confirma que continuem atuais. A operação deve revisar esses dados e autorizar o uso das imagens e dos depoimentos. Links externos não sincronizam estoque, avaliações ou pedidos.
+
+A disponibilidade em `Offer` reflete o estoque armazenado. O carrinho limita quantidades, mas **a criação de pedido não decrementa estoque automaticamente**; a informação comercial exige manutenção operacional.
+
+## 5. Frontend, acessibilidade e desempenho
+
+O layout serve `app.min.css` e `app.min.js`. CSS usa variáveis, Grid/Flexbox, media queries, foco visível e regras de redução de movimento. As pilhas serif/sans usam fontes locais/de sistema; a menção a Inter não comprova carregamento de fonte externa. Há tags de antecipação de conexão no layout, mas isso não comprova uso de Google Fonts.
+
+A fonte CSS inclui os estilos ativos, inclusive `save-address` e `password-toggle`. Sua manutenção usa Node.js/npm e `clean-css` 5.3.3; não há dependência de Node no runtime da loja:
+
+```powershell
+npm ci
+npm run build:css
+npm run check:css
+npm test
 ```
 
-A aplicação ficará disponível em: **`http://127.0.0.1:8128`**
+O gerador normaliza finais de linha para reprodução em Windows/Linux. O projeto não fornece pipeline equivalente para minificar JavaScript; fonte e arquivo servido precisam ser mantidos coerentes.
 
-### 4.2. Produção com Docker Compose
-Para subir o cluster completo com MySQL 8.4 e Mailpit:
+O JavaScript implementa prefetch de login/cadastro/carrinho, máscaras, toast com transição após 4,8 segundos, cópia PIX, foco no botão após seis dígitos, preview de upload e exibição de senha. O menu atualiza `aria-expanded` e fecha por Escape/clique fora, mas não transfere nem restaura automaticamente o foco.
 
-```bash
-cp .env.example .env
-docker compose up --build
-```
-O serviço responderá balanceado na porta **`8080`**.
+As imagens usam URLs diretas com API Base64 como alternativa. Há `IntersectionObserver` com margem de 1.500 px, prioridades e uso de `requestIdleCallback`. **Não há cache de imagens em `sessionStorage`.** O hero usa `hero-doces.webp`; alguns elementos incluem dimensões explícitas e prioridade de carregamento.
 
----
+Essas técnicas não comprovam economia de banda, navegação instantânea, CLS zero, LCP abaixo de um limiar ou conformidade WCAG. São necessárias medições representativas e testes de teclado, leitores de tela, contraste, zoom e movimento reduzido. A dimensão de uma imagem ou o uso de WebP isoladamente não determina o desempenho da página.
 
-## 5. Guia de Publicação no Netlify
+## 6. Analytics
 
-Como o Netlify é uma plataforma de hospedagem Jamstack estática, foi implementado o script `bin/build-static.php`, que pré-renderiza todo o catálogo, vitrine, páginas de produto, carrinho, sitemap e robots em arquivos HTML estáticos na pasta `dist/`.
+O layout lê:
 
-### Site Publicado Oficialmente
-* **URL de Produção no Netlify:** [https://elda-doces.netlify.app](https://elda-doces.netlify.app)
-* **Status do Deploy:** Ativo, com suporte a todas as rotas (incluindo `/entrar`, `/admin`, `/verificar-codigo`, `/cardapio`, `/minha-conta`).
+- `GOOGLE_ANALYTICS_ID`, com padrão `G-ELDADOCES0`;
+- `GOOGLE_TAG_MANAGER_ID`, ou `GTM_ID`, com padrão `GTM-T98GCPGN`.
 
-### Opção A: Atualização via Netlify Drop
-1. Acesse **[app.netlify.com/drop](https://app.netlify.com/drop)** no navegador.
-2. Faça login na conta Netlify.
-3. Arraste e solte o arquivo **`site-netlify.zip`** (ou a pasta **`dist`**) dentro da área de upload.
+Ele inicializa `dataLayer`, injeta `/gtm.js`, inclui configuração de analytics e iframe `noscript` de Google Tag Manager. IDs padrão e scripts presentes **não comprovam coleta ativa**, propriedade da conta, consentimento ou relatórios de conversão. Antes de publicar, confirme quais tags realmente executam e revise configuração, privacidade e consentimento. Não publique dados de clientes ou credenciais em capturas usadas para validar analytics.
 
-### Opção B: Publicação via Netlify CLI (Terminal)
-Se preferir utilizar a linha de comando do Netlify:
-```bash
-# 1. Login na CLI
-npx netlify login
+## 7. Aplicação dinâmica versus exportação estática
 
-# 2. Fazer o deploy de produção da pasta dist
-npx netlify deploy --dir=dist --prod
-```
+A loja dinâmica depende de PHP, sessão, armazenamento, autenticação, e-mail e Mercado Pago. O Compose fornece dois nós PHP-FPM, MySQL, Nginx HTTP na porta 8080 e Mailpit; não inclui TLS pronto nem e-mail de produção. O volume `product_images` é compartilhado com escrita pelos nós PHP e somente leitura pelo Nginx. Upload JPG/PNG tem limite de 4 MiB, com corpo de até 5 MiB nos POST administrativos de produto para acomodar multipart.
 
----
+O checkout grava/atualiza endereço somente quando `save_address=1`; desmarcado preserva o anterior. CPF segue para o `payer` do Mercado Pago, não para o endereço salvo ou os dados de cliente dos novos pedidos. Não há limpeza retroativa de registros ou backups. O webhook exige segredo e assinatura antes da consulta do pagamento; não implementa janela de idade/replay. O contador PIX não cancela pedidos automaticamente, e o dashboard não se atualiza em tempo real.
 
-## 6. Instruções para Envio na Plataforma CANVAS LMS
+### Restrições do exportador
 
-Para realizar a entrega acadêmica completa na plataforma **CANVAS**:
+`bin\build-static.php` requer PHP/bootstrap, cURL, shell POSIX e um servidor já ativo em `127.0.0.1:8128`. Ele **apaga `dist` e sobrescreve `netlify.toml`**. Esses caminhos são saídas geradas, não uma distribuição pronta versionada.
 
-1. **Arquivo Principal de Envio:**
-   - O arquivo compactado **`entrega-canvas-elda-doces.zip`** contém todo o código-fonte devidamente comentado, os scripts de infraestrutura, os schemas de banco de dados, os arquivos de configuração e este relatório completo de documentação e SEO.
-2. **Passo a Passo no Canvas:**
-   - Acesse a disciplina correspondente no portal Canvas da universidade.
-   - Navegue até a atividade/tarefa de entrega do projeto.
-   - Clique em **"Enviar tarefa" (Submit Assignment)**.
-   - Na aba **"Upload de Arquivo" (File Upload)**, anexe o arquivo `entrega-canvas-elda-doces.zip`.
-   - No campo de comentários textuais da submissão, você pode colar o link do site publicado no Netlify e a descrição resumida abaixo:
+Além de capturar páginas HTTP, o script renderiza manualmente telas de conta, checkout, administração e 2FA com dados do `Store` e identidades de demonstração. **Há risco de expor pedidos, métricas e dados pessoais.** Execute apenas contra base descartável e revise todos os arquivos antes de disponibilizá-los.
 
-> **Texto sugerido para o campo de comentários no Canvas:**
-> *"Prezado(a) Professor(a), segue a entrega completa do projeto de E-commerce e Catálogo Digital para a Elda Bolos e Doces.*
-> 
-> * **Site em Produção no Netlify:** https://elda-doces.netlify.app
-> * **Página de Acesso / Login:** https://elda-doces.netlify.app/entrar
-> * **Painel Administrativo:** https://elda-doces.netlify.app/admin
-> * **Credenciais de Demonstração:** Email: cesaraugustobardelotti@gmail.com | Senha: Doce@2026 | Código 2FA: qualquer código numérico de 6 dígitos (ex: 366261)
-> 
-> *Todo o código-fonte foi integralmente comentado, com destaque para a aplicação das técnicas de SEO Técnico, On-Page, Schema.org (JSON-LD), Core Web Vitals e SEO Local. O projeto foi compilado para versão estática e disponibilizado no Netlify no link acima. O arquivo ZIP anexo contém o material completo, documentação técnica e instruções de execução."*
+A saída estática:
 
----
+- Não oferece autenticação, POST, carrinho persistente, PIX, API, webhook ou administração protegida.
+- Pode ficar incompleta se requisições HTTP falharem; o processo pode continuar com páginas ausentes.
+- Não garante cópia completa de GTM, manifest e ícones.
+- Inclui `_redirects` com catch-all para `index.html` e status 200, sujeito a soft 404.
 
-## 7. Conclusão
+Não há deploy/URL Netlify ou pacotes `site-netlify.zip` e `entrega-canvas-elda-doces.zip` verificados. Mostrar um formulário exportado não torna login ou checkout funcionais. Qualquer entrega estática deve ser identificada como demonstração visual, sem credenciais reais e sem dados privados.
 
-O projeto **Elda Bolos e Doces** une boas práticas modernas de desenvolvimento web: arquitetura segura e escalável no backend PHP, experiência de compra sem fricção com PIX no frontend, código limpo e 100% documentado, e uma estratégia completa de SEO projetada para garantir máxima visibilidade orgânica nas buscas locais e nacionais.
+## 8. Roteiro de verificação antes de publicar
+
+1. **Ambiente:** confirmar domínio, HTTPS/proxy, raiz pública `public`, `APP_URL` e redirecionamento fixo. Não expor `.env`, `storage`, logs ou backups.
+2. **Conteúdo:** revisar endereço, telefone, horário, imagens, produtos, estoque e alegações de avaliações. Manter a nota decorativa distinta de avaliações verificadas.
+3. **URLs:** conferir home, cardápio, produto ativo/inativo, página inexistente e respostas GET/HEAD. Verificar canonical com e sem parâmetros e destino de todos os links.
+4. **Rastreamento:** inspecionar robots e sitemap no domínio correto. Revisar a política de indexação de páginas de login, conta e operação; robots não substitui autorização.
+5. **Schemas:** validar o JSON-LD renderizado com diferentes nomes/descrições de produto, comparar preço e disponibilidade com a página e corrigir inconsistências antes de publicação.
+6. **Frontend:** executar verificação CSS/testes, inspecionar assets carregados e testar navegação móvel, teclado, foco, contraste e redução de movimento.
+7. **Medição:** medir LCP, CLS e INP em condições representativas; validar tags e consentimento sem dados reais. Registrar resultados e contexto, em vez de presumir metas atingidas.
+8. **Exportação, se necessária:** usar somente base descartável, revisar arquivos, retirar conteúdo privado e testar status/rotas. Não publicar automaticamente a saída do script.
+
+Os testes isolados do repositório, validação de configuração e inspeção de fontes apoiam manutenção, mas não demonstram ranking, indexação, métricas reais, acessibilidade completa ou funcionamento de infraestrutura e integrações em produção.

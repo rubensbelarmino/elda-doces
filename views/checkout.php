@@ -59,7 +59,6 @@
                                autocomplete="off"
                                maxlength="14"
                                placeholder="000.000.000-00"
-                               value="<?= e($savedAddress['cpf'] ?? '') ?>"
                                required>
                     </label>
 

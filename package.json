@@ -1,0 +1,12 @@
+{
+  "name": "elda-doces-assets",
+  "private": true,
+  "scripts": {
+    "build:css": "node bin/build-css.cjs",
+    "check:css": "node bin/build-css.cjs --check",
+    "test": "node --test tests/assets.test.cjs"
+  },
+  "devDependencies": {
+    "clean-css": "5.3.3"
+  }
+}

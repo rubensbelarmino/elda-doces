@@ -1,4 +1,5 @@
 .env
+node_modules/
 storage/app.key
 storage/data.json
 storage/mail/

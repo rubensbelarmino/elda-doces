@@ -100,7 +100,10 @@ if ($isGet && $path === '/gtm.js') {
 // ============================================================================
 // 1. LIMITES DE TAMANHO DE PAYLOAD (PROTEÇÃO CONTRA DOS)
 // ============================================================================
-if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 2_000_000) {
+$isProductUpload = $method === 'POST' && ($path === '/admin/produtos/novo' || preg_match('#^/admin/produtos/[0-9a-f-]{36}/editar$#i', $path));
+// Reserva 1 MiB para campos e delimitadores multipart além da imagem de 4 MiB.
+$maxBodyBytes = $isProductUpload ? 5 * 1024 * 1024 : 2_000_000;
+if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > $maxBodyBytes) {
     render('errors/status', [
         'code' => 413, 
         'title' => 'Envio grande demais', 
@@ -251,11 +254,22 @@ if ($isGet && preg_match('#^/api/imagens/([a-zA-Z0-9._-]+\.(?:jpg|jpeg|png|webp)
 if ($method === 'POST' && $path === '/webhooks/mercado-pago') {
     header('Content-Type: application/json; charset=utf-8');
     $payload = json_decode(file_get_contents('php://input') ?: '{}', true);
-    $dataId = (string) ($_GET['data_id'] ?? $_GET['data.id'] ?? $_GET['id'] ?? ($payload['data']['id'] ?? ''));
+    $dataId = $_GET['data_id'] ?? $_GET['data.id'] ?? $_GET['id'] ?? ($payload['data']['id'] ?? '');
 
-    if (!preg_match('/^\d{1,30}$/', $dataId)) {
+    if ((!is_string($dataId) && !is_int($dataId)) || !preg_match('/^\d{1,30}$/', (string) $dataId)) {
         http_response_code(400);
         echo json_encode(['error' => 'invalid_data_id']);
+        exit;
+    }
+    $dataId = (string) $dataId;
+
+    if (!$mercadoPago->validateWebhook(
+        (string) ($_SERVER['HTTP_X_SIGNATURE'] ?? ''),
+        (string) ($_SERVER['HTTP_X_REQUEST_ID'] ?? ''),
+        $dataId
+    )) {
+        http_response_code(401);
+        echo json_encode(['error' => 'invalid_signature']);
         exit;
     }
 
@@ -811,16 +825,10 @@ if ($method === 'POST' && $path === '/checkout') {
         redirect('/checkout');
     }
 
-    // Persistência ou atualização dos dados de entrega no banco de dados
-    $saveAddressRequested = !empty($_POST['save_address']);
-    $existingAddress = $store->userDeliveryAddress((string) $user['id']);
-
-    if ($saveAddressRequested) {
-        // Grava no banco quando o usuário solicita salvar os dados
+    if (($_POST['save_address'] ?? '') === '1') {
         $deliveryData = [
             'name' => $customer['name'],
             'email' => strtolower((string) $user['email']),
-            'cpf' => $customer['cpf'],
             'phone' => $customer['phone'],
             'zip' => $customer['zip'],
             'address' => $customer['address'],
@@ -830,30 +838,6 @@ if ($method === 'POST' && $path === '/checkout') {
             'updated_at' => date(DATE_ATOM),
         ];
         $store->saveUserDeliveryAddress((string) $user['id'], $deliveryData);
-    } elseif ($existingAddress !== null) {
-        // Se o cliente já possuía endereço e alterou algum campo, sincroniza com o banco
-        $isChanged = false;
-        foreach (['name', 'cpf', 'phone', 'zip', 'address', 'number', 'complement', 'city'] as $k) {
-            if (($existingAddress[$k] ?? '') !== ($customer[$k] ?? '')) {
-                $isChanged = true;
-                break;
-            }
-        }
-        if ($isChanged) {
-            $deliveryData = [
-                'name' => $customer['name'],
-                'email' => strtolower((string) $user['email']),
-                'cpf' => $customer['cpf'],
-                'phone' => $customer['phone'],
-                'zip' => $customer['zip'],
-                'address' => $customer['address'],
-                'number' => $customer['number'],
-                'complement' => $customer['complement'],
-                'city' => $customer['city'],
-                'updated_at' => date(DATE_ATOM),
-            ];
-            $store->saveUserDeliveryAddress((string) $user['id'], $deliveryData);
-        }
     }
     if (!$mercadoPago->isConfigured()) {
         flash('error', 'O PIX ainda não foi conectado ao Mercado Pago. Configure o Access Token para finalizar.');

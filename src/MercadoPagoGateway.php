@@ -127,10 +127,8 @@ final class MercadoPagoGateway
      */
     public function validateWebhook(string $signature, string $requestId, string $dataId): bool
     {
-        // Se a chave secreta do webhook ainda não foi configurada, permite o prosseguimento
-        // para a validação direta na API oficial do Mercado Pago via payment($dataId)
-        if ($this->webhookSecret === '') {
-            return true;
+        if (trim($this->webhookSecret) === '') {
+            return false;
         }
 
         if ($signature === '' || $requestId === '' || $dataId === '') return false;
